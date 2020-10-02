@@ -15,6 +15,7 @@ namespace CakephpTestMigrator;
 
 
 use Cake\Core\Configure;
+use CakephpTestSuiteLight\FixtureManager;
 use Migrations\Migrations;
 
 class Migrator
