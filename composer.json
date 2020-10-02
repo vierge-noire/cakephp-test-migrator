@@ -1,7 +1,6 @@
 {
   "name": "vierge-noire/cakephp-test-migrator",
-  "description": "Migration helper for the light test suite",
-  "minimum-stability": "dev",
+  "description": "Migration helper for the CakePHP Test Suite Light",
   "license": "MIT",
   "authors": [
     {
@@ -11,6 +10,7 @@
   ],
   "minimum-stability": "dev",
   "require-dev": {
+    "cakephp/migrations": "^3.0",
     "vierge-noire/cakephp-test-suite-light": "^2.0"
   },
   "autoload": {
