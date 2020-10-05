@@ -9,7 +9,7 @@
     }
   ],
   "minimum-stability": "dev",
-  "require-dev": {
+  "require": {
     "cakephp/migrations": "^3.0",
     "vierge-noire/cakephp-test-suite-light": "^2.0"
   },
