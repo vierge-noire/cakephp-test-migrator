@@ -10,7 +10,7 @@
   ],
   "minimum-stability": "dev",
   "require": {
-    "cakephp/migrations": "3.0.0",
+    "cakephp/migrations": "^3.0",
     "vierge-noire/cakephp-test-suite-light": "^2.0"
   },
   "autoload": {
