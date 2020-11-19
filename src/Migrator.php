@@ -14,46 +14,49 @@ declare(strict_types=1);
 namespace CakephpTestMigrator;
 
 
-use Cake\Core\Configure;
 use CakephpTestSuiteLight\FixtureManager;
 use Migrations\Migrations;
 
 class Migrator
 {
     /**
-     * @var array
-     */
-    private $config;
-
-    /**
      * @var FixtureManager
      */
-    public $_fixtureManager;
+    protected $fixtureManager;
 
-    public function __construct()
+    /**
+     * @var ConfigReader
+     */
+    protected $configReader;
+
+    final public function __construct()
     {
-        $this->_fixtureManager = new FixtureManager();
+        $this->fixtureManager = new FixtureManager();
+        $this->configReader = new ConfigReader();
+        $this->configReader->readMigrationsInDatasources($this->fixtureManager);
     }
 
     /**
      * General command to run before your tests run
      * E.g. in tests/bootstrap.php
      * @param array $config
+     * @return void
      */
     public static function migrate(array $config = [])
     {
         $migrator = new static();
 
         $migrator
-            ->setConfig($config)
+            ->loadConfig($config)
             ->dropTablesForMissingMigrations()
             ->runAllMigrations();
     }
 
     /**
      * Run migrations for all configured migrations
+     * @return void
      */
-    private function runAllMigrations()
+    protected function runAllMigrations()
     {
         foreach ($this->getConfig() as $config) {
             $migrations = new Migrations($config);
@@ -65,13 +68,13 @@ class Migrator
      * If a migration is missing, all tables of the considered connection are dropped
      * @return $this
      */
-    private function dropTablesForMissingMigrations()
+    protected function dropTablesForMissingMigrations()
     {
         foreach ($this->getConfig() as $config) {
             $config['connection'] = $config['connection'] ?? 'test';
             $migrations = new Migrations($config);
             if ($this->isMigrationMissing($migrations)) {
-                $this->_fixtureManager->dropTables($config['connection']);
+                $this->getFixtureManager()->dropTables($config['connection']);
             }
         }
         return $this;
@@ -82,7 +85,7 @@ class Migrator
      * @param Migrations $migrations
      * @return bool
      */
-    private function isMigrationMissing(Migrations $migrations): bool
+    protected function isMigrationMissing(Migrations $migrations): bool
     {
         $status = $migrations->status();
         foreach ($status as $migration) {
@@ -94,22 +97,12 @@ class Migrator
     }
 
     /**
-     * @param mixed $config
+     * @param array $config
+     * @return $this
      */
-    public function setConfig(array $config = [])
+    protected function loadConfig(array $config)
     {
-        $config = array_merge(Configure::read('TestFixtureMigrations', []), $config);
-
-        if (empty($config)) {
-            $config = [['connection' => 'test', 'source' => 'Migrations']];
-        }
-
-        if (!isset($config[0])) {
-            $config = [$config];
-        }
-
-        $this->config = $config;
-
+        $this->getConfigReader()->loadConfig($config);
         return $this;
     }
 
@@ -118,6 +111,22 @@ class Migrator
      */
     public function getConfig(): array
     {
-        return $this->config;
+        return $this->getConfigReader()->getConfig();
+    }
+
+    /**
+     * @return ConfigReader
+     */
+    protected function getConfigReader(): ConfigReader
+    {
+        return $this->configReader;
+    }
+
+    /**
+     * @return FixtureManager
+     */
+    protected function getFixtureManager(): FixtureManager
+    {
+        return $this->fixtureManager;
     }
 }

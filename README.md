@@ -32,7 +32,7 @@ The `Migrator`approach presents the following advantages:
 
 ### Multiple migrations settings
 
-You can also pass the various migrations directly in the `Migrator` instantiation:
+You can pass the various migrations directly in the Migrator instantiation:
 ```$xslt
 \CakephpTestMigrator\Migrator::migrate([
     ['connection' => 'test'],       
@@ -42,7 +42,31 @@ You can also pass the various migrations directly in the `Migrator` instantiatio
  ]);
 ```
 
-If you ever switched to a branch with different migrations, the `Migrator` will automatically drop the tables where needed, and re-run the migrations. Switching branches therefore
+You can also pass the various migrations directly in your Datasource configuration, under the key `migrations`:
+```$xslt
+In config/app.php
+'test' => [
+    'className' => Connection::class,
+    'driver' => Mysql::class,
+    'persistent' => false,
+    'timezone' => 'UTC',
+    'flags' => [],
+    'cacheMetadata' => true,
+    'quoteIdentifiers' => false,
+    'log' => false,
+    'migrations' => [
+        ['plugin' => 'FooPlugin'],      
+        ['source' => 'BarFolder'],
+    ],
+],
+```
+
+You can set `migrations` simply to `true` if you which to use the default migration settings. 
+
+### What happens if I switch branches?
+
+If you ever switched to a branch with nonexistent up migrations, you've moved to a branch in a past state.
+The `Migrator` will automatically drop the tables where needed, and re-run the migrations. Switching branches therefore
 does not require any intervention on your side.
 
 ## License
