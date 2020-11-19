@@ -11,11 +11,30 @@
   "minimum-stability": "dev",
   "require": {
     "cakephp/migrations": "^3.0",
-    "vierge-noire/cakephp-test-suite-light": "^2.0"
+    "vierge-noire/cakephp-test-suite-light": "dev-trigger_based_sniffers"
+  },
+  "require-dev": {
+    "josegonzalez/dotenv": "dev-master",
+    "phpstan/phpstan": "^0.12.48@dev",
+    "phpunit/phpunit": "^8.0"
   },
   "autoload": {
     "psr-4": {
-      "CakephpTestMigrator\\": "src/"
+      "CakephpTestMigrator\\": "src"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "CakephpTestMigrator\\Test\\": "tests"
+    }
+  },
+  "scripts": {
+    "run-tests-mysql": "bash run_tests.sh Mysql",
+    "run-tests-pgsql": "bash run_tests.sh Postgres",
+    "run-tests-sqlite": "bash run_tests.sh Sqlite",
+    "run-phpstan": "./vendor/bin/phpstan analyse --memory-limit=-1"
+  },
+  "config": {
+    "sort-packages": true
   }
 }

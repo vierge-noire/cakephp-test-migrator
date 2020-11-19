@@ -1,3 +1,6 @@
 .idea
 /composer.lock
 /vendor/
+/.phpunit.result.cache
+**/test_migrator
+.env
