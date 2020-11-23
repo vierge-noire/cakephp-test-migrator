@@ -32,6 +32,16 @@ The `Migrator`approach presents the following advantages:
 
 ### Multiple migrations settings
 
+You can pass the various migrations directly in the Migrator instantiation:
+```$xslt
+\CakephpTestMigrator\Migrator::migrate([
+    ['connection' => 'test'],       
+    ['plugin' => 'FooPlugin'],      
+    ['source' => 'BarFolder'],
+    ...
+ ]);
+```
+
 You can also pass the various migrations directly in your Datasource configuration, under the key `migrations`:
 ```$xslt
 In config/app.php
