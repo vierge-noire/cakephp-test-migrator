@@ -11,7 +11,7 @@
   "minimum-stability": "dev",
   "require": {
     "cakephp/migrations": "^3.0",
-    "vierge-noire/cakephp-test-suite-light": "dev-trigger_based_sniffers"
+    "vierge-noire/cakephp-test-suite-light": "^2.1"
   },
   "require-dev": {
     "josegonzalez/dotenv": "dev-master",
