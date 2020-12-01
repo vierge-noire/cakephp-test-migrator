@@ -52,9 +52,6 @@ class ConfigReader
                 $this->config = array_merge($this->config, $config);
             }
         }
-        if (empty($this->config)) {
-            $this->config = [['connection' => 'test']];
-        }
         return $this;
     }
 
@@ -62,12 +59,18 @@ class ConfigReader
      * @param array $config
      * @return $this
      */
-    public function loadConfig(array $config = [])
+    public function prepareConfig(array $config = [])
     {
         $config = array_merge(Configure::read('TestFixtureMigrations', []), $config);
         if (!empty($config)) {
             $this->normalizeArray($config);
             $this->config = array_merge($this->config, $config);
+        }
+       foreach ($this->config as $k => $config) {
+           $this->config[$k]['connection'] = $this->config[$k]['connection'] ?? 'test';
+       }
+        if (empty($this->config)) {
+            $this->config = [['connection' => 'test']];
         }
         return $this;
     }
