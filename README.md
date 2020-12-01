@@ -69,6 +69,17 @@ If you ever switched to a branch with nonexistent up migrations, you've moved to
 The `Migrator` will automatically drop the tables where needed, and re-run the migrations. Switching branches therefore
 does not require any intervention on your side.
 
+## Authors
+* Juan Pablo Ramirez
+* Nicolas Masson
+
+
+## Support
+Contact us at vierge.noire.info@gmail.com for professional assistance.
+
+You like our work? [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L3L52P9JA)
+
+
 ## License
 
 The CakePHPFixtureFactories plugin is offered under an [MIT license](https://opensource.org/licenses/mit-license.php).
@@ -76,7 +87,3 @@ The CakePHPFixtureFactories plugin is offered under an [MIT license](https://ope
 Copyright 2020 Juan Pablo Ramirez and Nicolas Masson
 
 Licensed under The MIT License Redistributions of files must retain the above copyright notice.
-
-## Author
-* Juan Pablo Ramirez
-* Nicolas Masson
