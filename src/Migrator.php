@@ -47,7 +47,7 @@ class Migrator
         $migrator = new static();
 
         $migrator
-            ->loadConfig($config)
+            ->prepareConfig($config)
             ->dropTablesForMissingMigrations()
             ->runAllMigrations();
     }
@@ -100,9 +100,9 @@ class Migrator
      * @param array $config
      * @return $this
      */
-    protected function loadConfig(array $config)
+    protected function prepareConfig(array $config)
     {
-        $this->getConfigReader()->loadConfig($config);
+        $this->getConfigReader()->prepareConfig($config);
         return $this;
     }
 

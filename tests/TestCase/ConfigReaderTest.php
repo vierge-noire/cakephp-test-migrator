@@ -39,27 +39,37 @@ class ConfigReaderTest extends TestCase
     public function testSetConfigFromInjection()
     {
         $config = [
-            'connection' => 'Foo',
-            'plugin' => 'Bar'
+            ['connection' => 'Foo', 'plugin' => 'Bar',],
+            ['plugin' => 'Bar',]
         ];
 
-        $this->ConfigReader->loadConfig($config);
+        $expect = [
+            ['connection' => 'Foo', 'plugin' => 'Bar',],
+            ['plugin' => 'Bar', 'connection' => 'test',]
+        ];
 
-        $this->assertSame([$config], $this->ConfigReader->getConfig());
+        $this->ConfigReader->prepareConfig($config);
+
+        $this->assertSame($expect, $this->ConfigReader->getConfig());
     }
 
     public function testSetConfigWithConfigure()
     {
         $config = [
-            'connection' => 'FooTestSetConfigWithConfigure',
+            'source' => 'FooTestSetConfigWithConfigure',
             'plugin' => 'BarTestSetConfigWithConfigure'
         ];
+        $expect = [[
+            'source' => 'FooTestSetConfigWithConfigure',
+            'plugin' => 'BarTestSetConfigWithConfigure',
+            'connection' => 'test',
+        ]];
 
         Configure::write('TestFixtureMigrations', $config);
 
-        $this->ConfigReader->loadConfig();
+        $this->ConfigReader->prepareConfig();
 
-        $this->assertSame([$config], $this->ConfigReader->getConfig());
+        $this->assertSame($expect, $this->ConfigReader->getConfig());
 
         Configure::delete('TestFixtureMigrations');
     }
@@ -78,7 +88,7 @@ class ConfigReaderTest extends TestCase
 
         Configure::write('TestFixtureMigrations', $config2);
 
-        $this->ConfigReader->loadConfig($config1);
+        $this->ConfigReader->prepareConfig($config1);
         $this->assertSame([$config1], $this->ConfigReader->getConfig());
 
         Configure::delete('TestFixtureMigrations');
