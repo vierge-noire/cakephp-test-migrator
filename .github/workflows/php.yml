@@ -54,7 +54,7 @@ jobs:
           if [ ${{ matrix.db-type }} == 'mysql' ]; then
             sudo service mysql start && mysql -h 127.0.0.1 -u root -proot -e 'CREATE DATABASE IF NOT EXISTS test_migrator;';
           fi
-          composer run-tests-${{ matrix.db-type }}
+          composer ${{ matrix.db-type }}
 
       - name: Run Phpstan
-        run: composer run-phpstan
+        run: composer phpstan
