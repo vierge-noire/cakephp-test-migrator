@@ -14,10 +14,9 @@ declare(strict_types=1);
 namespace CakephpTestMigrator\Test\TestCase;
 
 
+use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\Migrator;
-use CakephpTestSuiteLight\FixtureManager;
-use CakephpTestSuiteLight\Sniffer\BaseTableSniffer;
 
 class MigratorTest extends TestCase
 {
@@ -26,28 +25,19 @@ class MigratorTest extends TestCase
      */
     public $migrator;
 
-    /**
-     * @var BaseTableSniffer
-     */
-    public $sniffer;
-
     public function setUp()
     {
         $this->migrator = new Migrator();
-
-        $fm = new FixtureManager();
-        $this->sniffer = $fm->getSniffer('test');
     }
 
     public function tearDown()
     {
         unset($this->migrator);
-        unset($this->sniffer);
     }
 
     private function fetchMigrationsInDB(string $dbTable): array
     {
-        return $this->sniffer->fetchQuery("SELECT migration_name FROM $dbTable");
+        return ConnectionManager::get('test')->execute("SELECT migration_name FROM $dbTable")->fetch();
     }
 
     public function testGetConfig()
