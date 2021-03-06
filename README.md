@@ -69,6 +69,14 @@ If you ever switched to a branch with nonexistent up migrations, you've moved to
 The `Migrator` will automatically drop the tables where needed, and re-run the migrations. Switching branches therefore
 does not require any intervention on your side.
 
+### What happens if my migrations insert data in the DB
+
+It is quite common, that migrations insert data within migrations. For example if you need to insert a role `admin` 
+
+### Trouble shooting
+
+It might be required, right after you installed the plugin, to drop and recreate your test database. If the problem persists, feel free to open an issue.
+
 ## Authors
 * Juan Pablo Ramirez
 * Nicolas Masson
