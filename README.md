@@ -71,8 +71,11 @@ does not require any intervention on your side.
 
 ### What happens if my migrations insert data in the DB
 
-It is quite common, that migrations insert data within migrations. For example if you need to insert a role `admin` 
-
+It is quite common, that migrations insert data within migrations, for example if you need to insert a role `admin`. It is therefore probably needed to clean your test DB after the migrations were run. In order to do so, you may run the following command after the migration were run in `tests/bootstrap.php`, assuming that the data was inserted on the connection `test`:
+```$xslt
+SnifferRegistry::get('test')->markAllTablesAsDirty();
+```
+ 
 ### Trouble shooting
 
 It might be required, right after you installed the plugin, to drop and recreate your test database. If the problem persists, feel free to open an issue.
