@@ -11,23 +11,10 @@ declare(strict_types=1);
  * @since         1.0.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
+namespace TestApp\Model\Table;
 
-use Migrations\AbstractMigration;
+use Cake\ORM\Query;
+use Cake\ORM\Table;
 
-class AppMigration extends AbstractMigration
-{
-    public function up()
-    {
-        $this->table('articles')
-            ->addPrimaryKey(['id'])
-            ->addColumn('title', 'string', [
-                'limit' => 128,
-                'null' => false,
-            ])
-            ->addTimestamps('created', 'modified')
-            ->create();
-    }
-
-    public function down()
-    {}
-}
+class ArticlesTable extends Table
+{}
