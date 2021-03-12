@@ -1,6 +1,7 @@
 <?php
 
 use Cake\Core\Configure;
+use Cake\Datasource\ConnectionManager;
 
 if (!defined('DS')) {
     define('DS', DIRECTORY_SEPARATOR);
@@ -84,13 +85,17 @@ $dbConnection = [
     ],
 ];
 
-\Cake\Datasource\ConnectionManager::setConfig('test', $dbConnection);
+ConnectionManager::setConfig('test', $dbConnection);
+
+$dbDefaultConnection = $dbConnection;
+$dbDefaultConnection['database'] = 'migrator';
+ConnectionManager::setConfig('default', $dbConnection);
 
 $dbConnection['migrations'] = ['plugin' => 'BarPlugin'];
-\Cake\Datasource\ConnectionManager::setConfig('test_2', $dbConnection);
+ConnectionManager::setConfig('test_2', $dbConnection);
 
 $dbConnection['migrations'] = true;
-\Cake\Datasource\ConnectionManager::setConfig('test_3', $dbConnection);
+ConnectionManager::setConfig('test_3', $dbConnection);
 
 \Cake\Core\Plugin::load('FooPlugin');
 \Cake\Core\Plugin::load('BarPlugin');
