@@ -46,6 +46,10 @@ class Migrator
     {
         $migrator = new static();
 
+        // Make sure that the connections are aliased, in case
+        // the migrations invoke the table registry.
+        $migrator->getFixtureManager()->aliasConnections();
+
         $migrator
             ->prepareConfig($config)
             ->dropTablesForMissingMigrations()
@@ -129,4 +133,4 @@ class Migrator
     {
         return $this->fixtureManager;
     }
-}
+}

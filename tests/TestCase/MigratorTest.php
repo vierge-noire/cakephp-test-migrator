@@ -15,6 +15,7 @@ namespace CakephpTestMigrator\Test\TestCase;
 
 
 use Cake\Datasource\ConnectionManager;
+use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\Migrator;
 
@@ -63,5 +64,12 @@ class MigratorTest extends TestCase
         $this->assertSame(['AppMigration'], $appMigrations);
         $this->assertSame(['FooMigration'], $fooPluginMigrations);
         $this->assertSame(['BarMigration'], $barPluginMigrations);
+    }
+
+    public function testTableRegistryConnectionName()
+    {
+        $Articles = TableRegistry::getTableLocator()->get('Articles');
+        ConnectionManager::getConfigOrFail('default');
+        $this->assertSame('test', $Articles->getConnection()->configName());
     }
 }
