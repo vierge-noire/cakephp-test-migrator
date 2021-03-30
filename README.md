@@ -35,8 +35,8 @@ The `Migrator`approach presents the following advantages:
 You can pass the various migrations directly in the Migrator instantiation:
 ```$xslt
 \CakephpTestMigrator\Migrator::migrate([
-    ['connection' => 'test'],       
-    ['plugin' => 'FooPlugin'],      
+    ['connection' => 'test', 'source' => 'TestFolder'],       
+    ['plugin' => 'FooPlugin', 'connection' => 'FooConnection'],      
     ['source' => 'BarFolder'],
     ...
  ]);
