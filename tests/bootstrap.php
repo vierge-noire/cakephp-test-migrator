@@ -1,7 +1,9 @@
 <?php
 
+use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Datasource\ConnectionManager;
+use josegonzalez\Dotenv\Loader;
 
 if (!defined('DS')) {
     define('DS', DIRECTORY_SEPARATOR);
@@ -10,12 +12,15 @@ define('ROOT', dirname(__DIR__));
 define('TESTS', ROOT . DS . 'tests' . DS);
 define('APP_PATH', TESTS . 'TestApp' . DS);
 define('CONFIG', APP_PATH . 'config' . DS);
+define('TMP', ROOT . DS . 'tmp' . DS);
+define('CACHE', TMP . 'cache' . DS);
 define('VENDOR_PATH', ROOT . DS . 'vendor' . DS);
 define('CAKE_CORE_INCLUDE_PATH', VENDOR_PATH . 'cakephp' . DS . 'cakephp');
 
-$loadEnv = function(string $fileName) {
+
+$loadEnv = function (string $fileName) {
     if (file_exists($fileName)) {
-        $dotenv = new \josegonzalez\Dotenv\Loader($fileName);
+        $dotenv = new Loader($fileName);
         $dotenv->parse()
             ->putenv(true)
             ->toEnv(true)
@@ -28,26 +33,39 @@ if (!getenv('DB_DRIVER')) {
 }
 $driver =  getenv('DB_DRIVER');
 
-if (!file_exists(ROOT . DS . '.env')) {
-    @copy(".env.$driver", ROOT . DS . '.env');
+if (!file_exists(TESTS . '.env')) {
+    @copy(TESTS . ".env.$driver", TESTS . '.env');
 }
 
 /**
  * Read .env file(s).
  */
-$loadEnv(ROOT . DS . '.env');
+$loadEnv(TESTS . '.env');
 
 // Re-read the driver
 $driver =  getenv('DB_DRIVER');
 echo "Using driver $driver \n";
 
 Configure::write('debug', true);
-Configure::write('App', [
+Configure::write(
+    'App', [
     'namespace' => 'TestApp',
     'paths' => [
         'plugins' => [TESTS . 'Plugins' . DS],
     ],
-]);
+    ]
+);
+
+$cacheConfig = [
+    'className' => 'File',
+    'path' => CACHE,
+    'url' => env('CACHE_DEFAULT_URL', null),
+    'duration'=> '+2 minutes',
+];
+
+Cache::setConfig('_cake_model_', $cacheConfig);
+Cache::setConfig('_cake_core_', $cacheConfig);
+
 
 if (!function_exists('loadPHPUnitAliases')) {
     /**

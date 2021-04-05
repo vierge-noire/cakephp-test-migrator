@@ -6,10 +6,10 @@ declare(strict_types=1);
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) 2020 Juan Pablo Ramirez and Nicolas Masson
- * @link          https://webrider.de/
- * @since         1.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright Copyright (c) 2020 Juan Pablo Ramirez and Nicolas Masson
+ * @link      https://webrider.de/
+ * @since     1.0.0
+ * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace CakephpTestMigrator\Test\TestCase;
 
@@ -17,6 +17,7 @@ namespace CakephpTestMigrator\Test\TestCase;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
+use CakephpTestMigrator\ConfigReader;
 use CakephpTestMigrator\Migrator;
 
 class MigratorTest extends TestCase
@@ -38,10 +39,15 @@ class MigratorTest extends TestCase
 
     private function fetchMigrationsInDB(string $dbTable): array
     {
-        return ConnectionManager::get('test')->execute("SELECT migration_name FROM $dbTable")->fetch();
+        return ConnectionManager::get('test')
+            ->newQuery()
+            ->select('migration_name')
+            ->from($dbTable)
+            ->execute()
+            ->fetch();
     }
 
-    public function testGetConfig()
+    public function testGetConfigFromDatasource()
     {
         $expect = [
             ['source' => 'FooSource', 'connection' => 'test'],
@@ -49,7 +55,8 @@ class MigratorTest extends TestCase
             ['plugin' => 'BarPlugin', 'connection' => 'test_2'],
             ['connection' => 'test_3'],
         ];
-        $config = $this->migrator->getConfig();
+        $migrator = Migrator::migrate();
+        $config = $migrator->getConfigs();
         $this->assertSame($expect, $config);
     }
 
@@ -69,7 +76,20 @@ class MigratorTest extends TestCase
     public function testTableRegistryConnectionName()
     {
         $Articles = TableRegistry::getTableLocator()->get('Articles');
-        ConnectionManager::getConfigOrFail('default');
+        ConnectionManager::getConfig('default');
         $this->assertSame('test', $Articles->getConnection()->configName());
+    }
+
+    public function testDropTablesForMissingMigrations()
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->insert('phinxlog', ['version' => 1, 'migration_name' => 'foo',]);
+
+        $count = $connection->newQuery()->select('version')->from('phinxlog')->execute()->count();
+        $this->assertSame(2, $count);
+
+        Migrator::migrate();
+        $count = $connection->newQuery()->select('version')->from('phinxlog')->execute()->count();
+        $this->assertSame(1, $count);
     }
 }
