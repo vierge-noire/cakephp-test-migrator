@@ -10,10 +10,11 @@
   ],
   "minimum-stability": "dev",
   "require": {
-    "cakephp/migrations": "^2.3",
-    "vierge-noire/cakephp-test-suite-light": "^1.1"
+    "cakephp/cakephp": "^3.6"
   },
   "require-dev": {
+    "cakephp/cakephp-codesniffer": "^4.0",
+    "cakephp/migrations": "^2.3",
     "josegonzalez/dotenv": "dev-master",
     "phpunit/phpunit": "^6.1"
   },
@@ -24,10 +25,13 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "CakephpTestMigrator\\Test\\": "tests"
+      "CakephpTestMigrator\\Test\\": "tests",
+      "MigratorTestApp\\": "tests\\TestApp\\src"
     }
   },
   "scripts": {
+    "cs-check": "phpcs --colors --parallel=16 -p src/ tests/",
+    "cs-fix": "phpcbf --colors --parallel=16 -p src/ tests/",
     "mysql": "bash run_tests.sh Mysql",
     "pgsql": "bash run_tests.sh Postgres",
     "sqlite": "bash run_tests.sh Sqlite"
