@@ -28,7 +28,7 @@ class TestSchemaCleaner
      * @param  ConsoleIo|null $io
      * @return void
      */
-    public static function dropSchema(string $connectionName, ?ConsoleIo $io = null)
+    public static function dropSchema(string $connectionName, $io = null)
     {
         self::info($io, __d('cake', 'Dropping all tables for connection ' . $connectionName));
 
@@ -51,7 +51,7 @@ class TestSchemaCleaner
      * @param  ConsoleIo|null $io
      * @return void
      */
-    public static function truncateSchema(string $connectionName, ?ConsoleIo $io = null)
+    public static function truncateSchema(string $connectionName, $io = null)
     {
         static::info($io, __d('cake', 'Truncating all tables for connection ' . $connectionName));
 

@@ -13,7 +13,6 @@
     "cakephp/cakephp": "^3.6"
   },
   "require-dev": {
-    "cakephp/cakephp-codesniffer": "^4.0",
     "cakephp/migrations": "^2.3",
     "josegonzalez/dotenv": "dev-master",
     "phpunit/phpunit": "^6.1"
@@ -30,8 +29,6 @@
     }
   },
   "scripts": {
-    "cs-check": "phpcs --colors --parallel=16 -p src/ tests/",
-    "cs-fix": "phpcbf --colors --parallel=16 -p src/ tests/",
     "mysql": "bash run_tests.sh Mysql",
     "pgsql": "bash run_tests.sh Postgres",
     "sqlite": "bash run_tests.sh Sqlite"

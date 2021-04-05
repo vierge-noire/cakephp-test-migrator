@@ -76,7 +76,7 @@ class MigratorTest extends TestCase
     public function testTableRegistryConnectionName()
     {
         $Articles = TableRegistry::getTableLocator()->get('Articles');
-        ConnectionManager::getConfigOrFail('default');
+        ConnectionManager::getConfig('default');
         $this->assertSame('test', $Articles->getConnection()->configName());
     }
 

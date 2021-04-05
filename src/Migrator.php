@@ -31,7 +31,7 @@ class Migrator
      */
     protected $io;
 
-    final public function __construct(?bool $verbose = false, ?ConfigReader $configReader = null)
+    final public function __construct($verbose = false, $configReader = null)
     {
         $this->io = new ConsoleIo();
         $this->io->level($verbose ? ConsoleIo::NORMAL : ConsoleIo::QUIET);
