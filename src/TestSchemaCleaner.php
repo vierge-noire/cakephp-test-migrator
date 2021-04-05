@@ -13,11 +13,9 @@ declare(strict_types=1);
  */
 namespace CakephpTestMigrator;
 
-use _HumbugBox8da477d78f0d\React\Socket\Connection;
 use Cake\Console\ConsoleIo;
 use Cake\Database\Schema\BaseSchema;
 use Cake\Database\Schema\Collection;
-use Cake\Database\Schema\SchemaDialect;
 use Cake\Datasource\ConnectionInterface;
 use Cake\Datasource\ConnectionManager;
 
