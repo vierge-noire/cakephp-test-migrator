@@ -3,4 +3,5 @@
 /vendor/
 /.phpunit.result.cache
 **/test_migrator
-.env
+tests/.env
+/tmp
