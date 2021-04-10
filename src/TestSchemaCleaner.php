@@ -38,7 +38,7 @@ class TestSchemaCleaner
         $stmts = [];
         foreach ($schema->listTables() as $table) {
             $table = $schema->describe($table);
-            $stmts = array_merge($stmts, $dialect->dropTableSql($table));
+            $stmts = array_merge($stmts, $dialect->dropTableSql($table)); /** @phpstan-ignore-line */
         }
 
         static::executeStatements(ConnectionManager::get($connectionName), $stmts);
@@ -62,7 +62,7 @@ class TestSchemaCleaner
         $tables = TestConnectionManager::unsetMigrationTables($tables);
         foreach ($tables as $table) {
             $table = $schema->describe($table);
-            $stmts = array_merge($stmts, $dialect->truncateTableSql($table));
+            $stmts = array_merge($stmts, $dialect->truncateTableSql($table)); /** @phpstan-ignore-line */
         }
 
         static::executeStatements(ConnectionManager::get($connectionName), $stmts);
@@ -75,17 +75,13 @@ class TestSchemaCleaner
      */
     private static function executeStatements(ConnectionInterface $connection, array $commands)
     {
-        $connection->transactional(
-            function (ConnectionInterface $connection) use ($commands) {
-                $connection->disableConstraints(
-                    function ($connection) use ($commands) {
-                        foreach ($commands as $command) {
-                            $connection->execute($command);
-                        }
-                    }
-                );
-            }
-        );
+        $connection->disableConstraints(function ($connection) use ($commands) {
+            $connection->transactional(function (ConnectionInterface $connection) use ($commands) {
+                foreach ($commands as $sql) {
+                    $connection->execute($sql);
+                }
+            });
+        });
     }
 
     /**
