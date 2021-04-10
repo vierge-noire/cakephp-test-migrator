@@ -30,7 +30,7 @@ class TestSchemaCleaner
      */
     public static function dropSchema(string $connectionName, ?ConsoleIo $io = null): void
     {
-        self::info($io, __d('cake', 'Dropping all tables for connection ' . $connectionName));
+        self::info($io, 'Dropping all tables for connection ' . $connectionName . '.');
 
         $schema = static::getSchema($connectionName);
         $dialect = static::getDialect($connectionName);
@@ -53,7 +53,7 @@ class TestSchemaCleaner
      */
     public static function truncateSchema(string $connectionName, ?ConsoleIo $io = null): void
     {
-        static::info($io, __d('cake', 'Truncating all tables for connection ' . $connectionName));
+        static::info($io,'Truncating all tables for connection "' . $connectionName . '".');
 
         $stmts = [];
         $schema = static::getSchema($connectionName);

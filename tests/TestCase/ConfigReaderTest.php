@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace CakephpTestMigrator\Test\TestCase;
 
 
-use Cake\Core\Configure;
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\ConfigReader;
 use CakephpTestSuiteLight\FixtureManager;

@@ -15,8 +15,6 @@ namespace CakephpTestMigrator;
 
 
 use Cake\Console\ConsoleIo;
-use Cake\Datasource\ConnectionManager;
-use Cake\Error\FatalErrorException;
 use Migrations\Migrations;
 
 class Migrator
@@ -31,7 +29,12 @@ class Migrator
      */
     protected $io;
 
-    final public function __construct(?bool $verbose = false, ?ConfigReader $configReader = null)
+    /**
+     * Migrator constructor.
+     * @param bool $verbose
+     * @param null $configReader
+     */
+    final public function __construct(bool $verbose, ?ConfigReader $configReader = null)
     {
         $this->io = new ConsoleIo();
         $this->io->level($verbose ? ConsoleIo::NORMAL : ConsoleIo::QUIET);
@@ -53,53 +56,16 @@ class Migrator
      */
     public static function migrate(array $config = [], $verbose = false): Migrator
     {
-        if (!class_exists(Migrations::class)) {
-            throw new FatalErrorException(__d('cake', 'The Migration class could not be found.'));
-        }
-
         $migrator = new static($verbose);
 
         $migrator->configReader->readMigrationsInDatasources();
 
         $migrator->configReader->readConfig($config);
 
-        $migrator->dropTablesForMissingMigrations();
-        $migrator->runAllMigrations();
+        $migrator->dropTablesIfMigrationStatusChanged();
+        $migrator->runMigrations();
 
         return $migrator;
-    }
-
-    /**
-     * Import the schema from a file, or an array of files.
-     *
-     * @param  string          $connectionName Connection
-     * @param  string|string[] $file           File to dump
-     * @param  bool            $verbose        Set to true to display messages
-     * @return void
-     */
-    public static function dump(string $connectionName, $file, bool $verbose): void
-    {
-        $files = (array)$file;
-
-        $migrator = new static($verbose);
-
-        $schemaCleaner = new TestSchemaCleaner();
-
-        TestSchemaCleaner::dropSchema($connectionName, $migrator->io);
-
-        foreach ($files as $file) {
-            $sql = file_get_contents($file);
-
-            if ($sql === false) {
-                throw new \RuntimeException(__('cake', 'The file {0} could not be read.', $file));
-            }
-
-            $migrator->io->info(__d('cake', 'Dumping schema in file {0} for connection {1}.', [$file, $connectionName]));
-            ConnectionManager::get($connectionName)->execute($sql);
-            $migrator->io->success(__d('cake', 'Dump of schema in file {0} for connection {1} successful.', [$file, $connectionName]));
-        }
-
-        $schemaCleaner::truncateSchema($connectionName, $migrator->io);
     }
 
     /**
@@ -107,15 +73,15 @@ class Migrator
      *
      * @return void
      */
-    protected function runAllMigrations(): void
+    protected function runMigrations(): void
     {
         foreach ($this->getConfigs() as $config) {
             $migrations = new Migrations();
             $result = $migrations->migrate($config);
             if ($result === true) {
-                $this->io->success(__d('cake', 'Running for connection {0} successful.', $config['connection']));
+                $this->io->success( 'Migration for connection "' . $config['connection'] . '" successful.');
             } else {
-                $this->io->error(__d('cake', 'Migration for connection {0} failed.', $config['connection']));
+                $this->io->error( 'Migration for connection "' . $config['connection'] . '" failed.');
             }
 
             TestSchemaCleaner::truncateSchema($config['connection'], $this->io);
@@ -123,17 +89,18 @@ class Migrator
     }
 
     /**
-     * If a migration is missing, all tables of the considered connection are dropped.
+     * If a migration is missing or down, all tables of the considered connection are dropped.
      *
      * @return $this
      */
-    protected function dropTablesForMissingMigrations(): self
+    protected function dropTablesIfMigrationStatusChanged(): self
     {
         $schemaManager = new TestSchemaCleaner();
         foreach ($this->getConfigs() as $config) {
             $config['connection'] = $config['connection'] ?? 'test';
             $migrations = new Migrations($config);
-            if ($this->isMigrationMissing($migrations)) {
+            if ($this->isStatusChanged($migrations)) {
+                $this->io->info('Dropping the test schema.');
                 $schemaManager->dropSchema($config['connection'], $this->io);
             }
         }
@@ -147,10 +114,15 @@ class Migrator
      * @param  Migrations $migrations
      * @return bool
      */
-    protected function isMigrationMissing(Migrations $migrations): bool
+    protected function isStatusChanged(Migrations $migrations): bool
     {
         foreach ($migrations->status() as $migration) {
             if ($migration['status'] === 'up' && ($migration['missing'] ?? false)) {
+                $this->io->info('A missing migration was detected.');
+                return true;
+            }
+            if ($migration['status'] === 'down') {
+                $this->io->info('A new migration was detected.');
                 return true;
             }
         }
