@@ -16,13 +16,8 @@ namespace CakephpTestMigrator\Test\TestCase;
 
 use Cake\Database\Exception\DatabaseException;
 use Cake\Datasource\ConnectionManager;
-use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
-use CakephpTestMigrator\ConfigReader;
-use CakephpTestMigrator\Migrator;
 use CakephpTestMigrator\TestConnectionManager;
-use CakephpTestMigrator\TestSchemaCleaner;
-use MigratorTestApp\Model\Table\ArticlesTable;
 
 class TestConnectionManagerTest extends TestCase
 {

@@ -17,26 +17,10 @@ namespace CakephpTestMigrator\Test\TestCase;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
-use CakephpTestMigrator\ConfigReader;
 use CakephpTestMigrator\Migrator;
 
 class MigratorTest extends TestCase
 {
-    /**
-     * @var Migrator
-     */
-    public $migrator;
-
-    public function setUp()
-    {
-        $this->migrator = new Migrator();
-    }
-
-    public function tearDown()
-    {
-        unset($this->migrator);
-    }
-
     private function fetchMigrationsInDB(string $dbTable): array
     {
         return ConnectionManager::get('test')
