@@ -51,7 +51,6 @@ class Migrator
      *
      * @param array $config
      * @param bool  $verbose Set to true to display messages
-     *
      * @return Migrator
      */
     public static function migrate(array $config = [], $verbose = false): Migrator
@@ -59,11 +58,8 @@ class Migrator
         $migrator = new static($verbose);
 
         $migrator->configReader->readMigrationsInDatasources();
-
         $migrator->configReader->readConfig($config);
-
-        $migrator->dropTablesIfMigrationStatusChanged();
-        $migrator->runMigrations();
+        $migrator->handleMigrationsStatus();
 
         return $migrator;
     }
@@ -71,20 +67,21 @@ class Migrator
     /**
      * Run migrations for all configured migrations.
      *
+     * @param string[] $config Migration configuration.
      * @return void
      */
-    protected function runMigrations()
+    protected function runMigrations(array $config)
     {
-        foreach ($this->getConfigs() as $config) {
-            $migrations = new Migrations();
-            $result = $migrations->migrate($config);
-            if ($result === true) {
-                $this->io->success( 'Migration for connection "' . $config['connection'] . '" successful.');
-            } else {
-                $this->io->error( 'Migration for connection "' . $config['connection'] . '" failed.');
-            }
+        $migrations = new Migrations();
+        $result = $migrations->migrate($config);
 
-            TestSchemaCleaner::truncateSchema($config['connection'], $this->io);
+        $msg = 'Migrations for ' . $this->stringifyConfig($config);
+
+
+        if ($result === true) {
+            $this->io->success($msg . ' successfully run.');
+        } else {
+            $this->io->error( $msg . ' failed.');
         }
     }
 
@@ -93,16 +90,34 @@ class Migrator
      *
      * @return $this
      */
-    protected function dropTablesIfMigrationStatusChanged(): self
+    protected function handleMigrationsStatus(): self
     {
         $schemaManager = new TestSchemaCleaner();
-        foreach ($this->getConfigs() as $config) {
-            $config['connection'] = $config['connection'] ?? 'test';
+        $connectionsToDrop = [];
+        foreach ($this->getConfigs() as &$config) {
+            $connectionName = $config['connection'] = $config['connection'] ?? 'test';
+            $this->io->info("Migrations check for {$this->stringifyConfig($config)} ...");
             $migrations = new Migrations($config);
             if ($this->isStatusChanged($migrations)) {
-                $this->io->info('Dropping the test schema.');
-                $schemaManager->dropSchema($config['connection'], $this->io);
+                if (!in_array($connectionName, $connectionsToDrop))
+                {
+                    $connectionsToDrop[] = $connectionName;
+                }
             }
+        }
+
+        if (empty($connectionsToDrop)) {
+            $this->io->success("No migrations changes found.");
+
+            return $this;
+        }
+
+        foreach ($connectionsToDrop as $connectionName) {
+            $schemaManager->dropSchema($connectionName, $this->io);
+        }
+
+        foreach ($this->getConfigs() as $config) {
+            $this->runMigrations($config);
         }
 
         return $this;
@@ -118,16 +133,34 @@ class Migrator
     {
         foreach ($migrations->status() as $migration) {
             if ($migration['status'] === 'up' && ($migration['missing'] ?? false)) {
-                $this->io->info('A missing migration was detected.');
+                $this->io->info('Missing migrations detected.');
                 return true;
             }
             if ($migration['status'] === 'down') {
-                $this->io->info('A new migration was detected.');
+                $this->io->info('New migrations status detected.');
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Stringify the migration parameters.
+     *
+     * @param string[] $config Config array
+     * @return string
+     */
+    protected function stringifyConfig(array $config): string
+    {
+        $options = [];
+        foreach (['connection', 'plugin', 'source', 'target'] as $option) {
+            if (isset($config[$option])) {
+                $options[] = $option . ' "'.$config[$option].'"';
+            }
+        }
+
+        return implode(', ', $options);
     }
 
     /**
