@@ -30,8 +30,6 @@ class TestSchemaCleaner
      */
     public static function dropSchema(string $connectionName, ?ConsoleIo $io = null): void
     {
-        self::info($io, 'Dropping all tables for connection ' . $connectionName . '.');
-
         $schema = static::getSchema($connectionName);
         $dialect = static::getDialect($connectionName);
 
@@ -42,6 +40,7 @@ class TestSchemaCleaner
         }
 
         static::executeStatements(ConnectionManager::get($connectionName), $stmts);
+        self::info($io, 'Tables for connection "' . $connectionName . '" dropped.');
     }
 
     /**
@@ -53,8 +52,6 @@ class TestSchemaCleaner
      */
     public static function truncateSchema(string $connectionName, ?ConsoleIo $io = null): void
     {
-        static::info($io,'Truncating all tables for connection "' . $connectionName . '".');
-
         $stmts = [];
         $schema = static::getSchema($connectionName);
         $dialect = static::getDialect($connectionName);
@@ -66,6 +63,7 @@ class TestSchemaCleaner
         }
 
         static::executeStatements(ConnectionManager::get($connectionName), $stmts);
+        static::info($io,'Tables for connection "' . $connectionName . '" truncated.');
     }
 
     /**
