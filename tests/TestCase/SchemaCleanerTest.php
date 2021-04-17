@@ -16,11 +16,11 @@ namespace CakephpTestMigrator\Test\TestCase;
 
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
-use CakephpTestMigrator\TestSchemaCleaner;
+use CakephpTestMigrator\SchemaCleaner;
 use Migrations\Migrations;
 use MigratorTestApp\Model\Table\ArticlesTable;
 
-class TestSchemaCleanerTest extends TestCase
+class SchemaCleanerTest extends TestCase
 {
     /**
      * @var ArticlesTable
@@ -40,7 +40,7 @@ class TestSchemaCleanerTest extends TestCase
     public function testDropSchema()
     {
         // Drop tables to ensure that the following migration runs
-        TestSchemaCleaner::dropSchema('test');
+        (new SchemaCleaner())->drop('test');
 
         // Populate the schema
         $migrations = new Migrations();
@@ -48,7 +48,7 @@ class TestSchemaCleanerTest extends TestCase
         $this->assertSame(1, $this->Articles->find()->count());
 
         // Drop the schema
-        TestSchemaCleaner::dropSchema('test');
+        (new SchemaCleaner())->drop('test');
 
         $this->expectException(\Exception::class);
         $this->Articles->find()->all();
@@ -57,14 +57,14 @@ class TestSchemaCleanerTest extends TestCase
     public function testTruncateSchema()
     {
         // Drop tables to ensure that the following migration runs
-        TestSchemaCleaner::dropSchema('test');
+        (new SchemaCleaner())->drop('test');
         // Populate the schema
         $migrations = new Migrations(['connection' => 'test']);
         $migrations->migrate();
         $this->assertSame(1, $this->Articles->find()->count());
 
         // Truncate the schema
-        TestSchemaCleaner::truncateSchema('test');
+        (new SchemaCleaner())->truncate('test');
         $this->assertSame(0, $this->Articles->find()->count());
 
         $migration = $migrations->status()[0];
