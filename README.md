@@ -30,6 +30,8 @@ The `Migrator`approach presents the following advantages:
 * it eases the maintenance of your tests, since regular and test DBs are managed the same way,
 * it indirectly tests your migrations.
 
+You may pass `true` as the second argument for a verbose output on the console. 
+
 ### Multiple migrations settings
 
 You can pass the various migrations directly in the Migrator instantiation:
@@ -39,7 +41,7 @@ You can pass the various migrations directly in the Migrator instantiation:
     ['plugin' => 'FooPlugin'],      
     ['source' => 'BarFolder'],
     ...
- ]);
+ ], true);
 ```
 
 You can also pass the various migrations directly in your Datasource configuration, under the key `migrations`:
@@ -68,6 +70,30 @@ You can set `migrations` simply to `true` if you which to use the default migrat
 If you ever switched to a branch with nonexistent up migrations, you've moved to a branch in a past state.
 The `Migrator` will automatically drop the tables where needed, and re-run the migrations. Switching branches therefore
 does not require any intervention on your side.
+
+### What if I do not use migrations?
+
+The `Migrator::dump()` will help you import any schema from one or several sql file. Run for example:
+
+```$xslt
+Migrator::dump('test', 'path/to/file.sql')
+```
+or with multiples files
+```$xslt
+Migrator::dump('test', [
+    'path1/to/file1.sql',
+    'path2/to/file2.sql',
+])
+```
+or for a verbose output
+```$xslt
+Migrator::dump('test', 'path/to/file.sql', true)
+```
+
+The first argument is the name of the connection, the second the file(s) to dump, the third the verbosity (boolean).
+
+This method will however drop the schema prior to recreating it, which presents a significant loss of
+performance in comparison to the migration-based solution.
 
 ## License
 

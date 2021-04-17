@@ -15,6 +15,7 @@ namespace CakephpTestMigrator;
 
 
 use Cake\Console\ConsoleIo;
+use Cake\Datasource\ConnectionManager;
 use Migrations\Migrations;
 
 class Migrator
@@ -65,6 +66,44 @@ class Migrator
     }
 
     /**
+     * Import the schema from a file, or an array of files.
+     *
+     * @param string $connectionName Connection
+     * @param string|string[] $file File to dump
+     * @param bool|null $verbose Set to true to display messages
+     * @return void
+     * @throws \Exception if the truncation failed
+     * @throws \RuntimeException if the file could not be processed
+     */
+    public static function dump(string $connectionName, $file, ?bool $verbose = false)
+    {
+        $files = (array)$file;
+
+        $migrator = new static($verbose);
+        $schemaCleaner = new SchemaCleaner($migrator->io);
+        $schemaCleaner->drop($connectionName);
+
+        foreach ($files as $file) {
+            if (!file_exists($file)) {
+                throw new \RuntimeException('The file ' . $file . ' could not found.');
+            }
+
+            $sql = file_get_contents($file);
+            if ($sql === false) {
+                throw new \RuntimeException('The file ' . $file . ' could not read.');
+            }
+
+            ConnectionManager::get($connectionName)->execute($sql);
+
+            $migrator->io->success(
+                'Dump of schema in file ' . $file . ' for connection ' . $connectionName . ' successful.'
+            );
+        }
+
+        $schemaCleaner->truncate($connectionName);
+    }
+
+    /**
      * Run migrations for all configured migrations.
      *
      * @param string[] $config Migration configuration.
@@ -92,7 +131,7 @@ class Migrator
      */
     protected function handleMigrationsStatus(): self
     {
-        $schemaManager = new TestSchemaCleaner();
+        $schemaCleaner = new SchemaCleaner($this->io);
         $connectionsToDrop = [];
         foreach ($this->getConfigs() as &$config) {
             $connectionName = $config['connection'] = $config['connection'] ?? 'test';
@@ -113,11 +152,15 @@ class Migrator
         }
 
         foreach ($connectionsToDrop as $connectionName) {
-            $schemaManager->dropSchema($connectionName, $this->io);
+            $schemaCleaner->drop($connectionName);
         }
 
         foreach ($this->getConfigs() as $config) {
             $this->runMigrations($config);
+        }
+
+        foreach ($connectionsToDrop as $connectionName) {
+            $schemaCleaner->truncate($connectionName);
         }
 
         return $this;
