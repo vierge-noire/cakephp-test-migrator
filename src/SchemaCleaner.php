@@ -15,7 +15,7 @@ namespace CakephpTestMigrator;
 
 use Cake\Console\ConsoleIo;
 use Cake\Database\Schema\BaseSchema;
-use Cake\Database\Schema\CollectionInterface;
+use Cake\Database\Schema\Collection;
 use Cake\Database\Schema\TableSchema;
 use Cake\Datasource\ConnectionInterface;
 use Cake\Datasource\ConnectionManager;
@@ -32,7 +32,7 @@ class SchemaCleaner
      *
      * @param \Cake\Console\ConsoleIo|null $io Outputs if provided.
      */
-    public function __construct(?ConsoleIo $io = null)
+    public function __construct(ConsoleIo $io = null)
     {
         $this->io = $io;
     }
@@ -140,9 +140,9 @@ class SchemaCleaner
 
     /**
      * @param  string $connectionName name of the connection.
-     * @return \Cake\Database\Schema\CollectionInterface
+     * @return \Cake\Database\Schema\Collection
      */
-    protected function getSchema(string $connectionName): CollectionInterface
+    protected function getSchema(string $connectionName): Collection
     {
         return ConnectionManager::get($connectionName)->getSchemaCollection();
     }
