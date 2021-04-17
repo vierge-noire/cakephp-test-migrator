@@ -70,12 +70,12 @@ class Migrator
      *
      * @param string $connectionName Connection
      * @param string|string[] $file File to dump
-     * @param bool|null $verbose Set to true to display messages
+     * @param bool $verbose Set to true to display messages
      * @return void
      * @throws \Exception if the truncation failed
      * @throws \RuntimeException if the file could not be processed
      */
-    public static function dump(string $connectionName, $file, ?bool $verbose = false)
+    public static function dump(string $connectionName, $file, bool $verbose = false)
     {
         $files = (array)$file;
 

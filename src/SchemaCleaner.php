@@ -153,6 +153,7 @@ class SchemaCleaner
      */
     protected function getDialect(string $connectionName): BaseSchema
     {
+        /** @phpstan-ignore-next-line */
         return ConnectionManager::get($connectionName)->getDriver()->schemaDialect();
     }
 }
