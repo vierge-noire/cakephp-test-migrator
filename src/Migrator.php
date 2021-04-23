@@ -135,7 +135,7 @@ class Migrator
         $connectionsToDrop = [];
         foreach ($this->getConfigs() as &$config) {
             $connectionName = $config['connection'] = $config['connection'] ?? 'test';
-            $this->io->info("Migrations check for {$this->stringifyConfig($config)} ...");
+            $this->io->info("Reading migrations status for {$this->stringifyConfig($config)}...");
             $migrations = new Migrations($config);
             if ($this->isStatusChanged($migrations)) {
                 if (!in_array($connectionName, $connectionsToDrop))
@@ -146,7 +146,7 @@ class Migrator
         }
 
         if (empty($connectionsToDrop)) {
-            $this->io->success("No migrations changes found.");
+            $this->io->success("No migration changes detected.");
 
             return $this;
         }
@@ -176,11 +176,11 @@ class Migrator
     {
         foreach ($migrations->status() as $migration) {
             if ($migration['status'] === 'up' && ($migration['missing'] ?? false)) {
-                $this->io->info('Missing migrations detected.');
+                $this->io->info('Missing migration(s) detected.');
                 return true;
             }
             if ($migration['status'] === 'down') {
-                $this->io->info('New migrations status detected.');
+                $this->io->info('New migration(s) found.');
                 return true;
             }
         }
