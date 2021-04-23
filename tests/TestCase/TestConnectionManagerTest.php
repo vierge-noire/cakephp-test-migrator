@@ -11,16 +11,19 @@ declare(strict_types=1);
  * @since     1.0.0
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
+namespace CakephpTestMigrator\Test\TestCase;
 
-use Migrations\AbstractMigration;
 
-class FooMigration extends AbstractMigration
+use Cake\Datasource\ConnectionManager;
+use Cake\TestSuite\TestCase;
+use CakephpTestMigrator\TestConnectionManager;
+
+class TestConnectionManagerTest extends TestCase
 {
-    public function up()
+    public function testAliasConnections(): void
     {
-    }
-
-    public function down()
-    {
+        TestConnectionManager::aliasConnections();
+        $testDB = ConnectionManager::get('default')->config()['database'];
+        $this->assertSame('test_migrator', $testDB);
     }
 }

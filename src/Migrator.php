@@ -6,114 +6,210 @@ declare(strict_types=1);
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) 2020 Juan Pablo Ramirez and Nicolas Masson
- * @link          https://webrider.de/
- * @since         1.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright Copyright (c) 2020 Juan Pablo Ramirez and Nicolas Masson
+ * @link      https://webrider.de/
+ * @since     1.0.0
+ * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace CakephpTestMigrator;
 
 
-use CakephpTestSuiteLight\FixtureManager;
+use Cake\Console\ConsoleIo;
+use Cake\Datasource\ConnectionManager;
 use Migrations\Migrations;
 
 class Migrator
 {
     /**
-     * @var FixtureManager
-     */
-    protected $fixtureManager;
-
-    /**
      * @var ConfigReader
      */
     protected $configReader;
 
-    final public function __construct()
+    /**
+     * @var ConsoleIo
+     */
+    protected $io;
+
+    /**
+     * Migrator constructor.
+     * @param bool $verbose
+     * @param null $configReader
+     */
+    final public function __construct(bool $verbose, ?ConfigReader $configReader = null)
     {
-        $this->fixtureManager = new FixtureManager();
-        $this->configReader = new ConfigReader();
-        $this->configReader->readMigrationsInDatasources($this->fixtureManager);
+        $this->io = new ConsoleIo();
+        $this->io->level($verbose ? ConsoleIo::NORMAL : ConsoleIo::QUIET);
+        $this->configReader = $configReader ?? new ConfigReader();
+
+        // Make sure that the connections are aliased, in case
+        // the migrations invoke the table registry.
+        TestConnectionManager::aliasConnections();
     }
 
     /**
      * General command to run before your tests run
      * E.g. in tests/bootstrap.php
+     *
      * @param array $config
-     * @return void
+     * @param bool  $verbose Set to true to display messages
+     * @return Migrator
      */
-    public static function migrate(array $config = []): void
+    public static function migrate(array $config = [], $verbose = false): Migrator
     {
-        $migrator = new static();
+        $migrator = new static($verbose);
 
-        // Make sure that the connections are aliased, in case
-        // the migrations invoke the table registry.
-        $migrator->getFixtureManager()->aliasConnections();
+        $migrator->configReader->readMigrationsInDatasources();
+        $migrator->configReader->readConfig($config);
+        $migrator->handleMigrationsStatus();
 
-        $migrator
-            ->prepareConfig($config)
-            ->dropTablesForMissingMigrations()
-            ->runAllMigrations();
+        return $migrator;
     }
 
     /**
-     * Run migrations for all configured migrations
+     * Import the schema from a file, or an array of files.
+     *
+     * @param string $connectionName Connection
+     * @param string|string[] $file File to dump
+     * @param bool $verbose Set to true to display messages
+     * @return void
+     * @throws \Exception if the truncation failed
+     * @throws \RuntimeException if the file could not be processed
+     */
+    public static function dump(string $connectionName, $file, bool $verbose = false)
+    {
+        $files = (array)$file;
+
+        $migrator = new static($verbose);
+        $schemaCleaner = new SchemaCleaner($migrator->io);
+        $schemaCleaner->drop($connectionName);
+
+        foreach ($files as $file) {
+            if (!file_exists($file)) {
+                throw new \RuntimeException('The file ' . $file . ' could not found.');
+            }
+
+            $sql = file_get_contents($file);
+            if ($sql === false) {
+                throw new \RuntimeException('The file ' . $file . ' could not read.');
+            }
+
+            ConnectionManager::get($connectionName)->execute($sql);
+
+            $migrator->io->success(
+                'Dump of schema in file ' . $file . ' for connection ' . $connectionName . ' successful.'
+            );
+        }
+
+        $schemaCleaner->truncate($connectionName);
+    }
+
+    /**
+     * Run migrations for all configured migrations.
+     *
+     * @param string[] $config Migration configuration.
      * @return void
      */
-    protected function runAllMigrations(): void
+    protected function runMigrations(array $config): void
     {
-        foreach ($this->getConfig() as $config) {
-            $migrations = new Migrations($config);
-            $migrations->migrate($config);
+        $migrations = new Migrations();
+        $result = $migrations->migrate($config);
+
+        $msg = 'Migrations for ' . $this->stringifyConfig($config);
+
+
+        if ($result === true) {
+            $this->io->success($msg . ' successfully run.');
+        } else {
+            $this->io->error( $msg . ' failed.');
         }
     }
 
     /**
-     * If a migration is missing, all tables of the considered connection are dropped
+     * If a migration is missing or down, all tables of the considered connection are dropped.
+     *
      * @return $this
      */
-    protected function dropTablesForMissingMigrations()
+    protected function handleMigrationsStatus(): self
     {
-        foreach ($this->getConfig() as $config) {
-            $config['connection'] = $config['connection'] ?? 'test';
+        $schemaCleaner = new SchemaCleaner($this->io);
+        $connectionsToDrop = [];
+        foreach ($this->getConfigs() as &$config) {
+            $connectionName = $config['connection'] = $config['connection'] ?? 'test';
+            $this->io->info("Reading migrations status for {$this->stringifyConfig($config)}...");
             $migrations = new Migrations($config);
-            if ($this->isMigrationMissing($migrations)) {
-                $this->getFixtureManager()->dropTables($config['connection']);
+            if ($this->isStatusChanged($migrations)) {
+                if (!in_array($connectionName, $connectionsToDrop))
+                {
+                    $connectionsToDrop[] = $connectionName;
+                }
             }
         }
+
+        if (empty($connectionsToDrop)) {
+            $this->io->success("No migration changes detected.");
+
+            return $this;
+        }
+
+        foreach ($connectionsToDrop as $connectionName) {
+            $schemaCleaner->drop($connectionName);
+        }
+
+        foreach ($this->getConfigs() as $config) {
+            $this->runMigrations($config);
+        }
+
+        foreach ($connectionsToDrop as $connectionName) {
+            $schemaCleaner->truncate($connectionName);
+        }
+
         return $this;
     }
 
     /**
-     * Checks if any migrations are up but missing
-     * @param Migrations $migrations
+     * Checks if any migrations are up but missing.
+     *
+     * @param  Migrations $migrations
      * @return bool
      */
-    protected function isMigrationMissing(Migrations $migrations): bool
+    protected function isStatusChanged(Migrations $migrations): bool
     {
-        $status = $migrations->status();
-        foreach ($status as $migration) {
+        foreach ($migrations->status() as $migration) {
             if ($migration['status'] === 'up' && ($migration['missing'] ?? false)) {
+                $this->io->info('Missing migration(s) detected.');
+                return true;
+            }
+            if ($migration['status'] === 'down') {
+                $this->io->info('New migration(s) found.');
                 return true;
             }
         }
+
         return false;
     }
 
     /**
-     * @param array $config
-     * @return $this
+     * Stringify the migration parameters.
+     *
+     * @param string[] $config Config array
+     * @return string
      */
-    protected function prepareConfig(array $config)
+    protected function stringifyConfig(array $config): string
     {
-        $this->getConfigReader()->prepareConfig($config);
-        return $this;
+        $options = [];
+        foreach (['connection', 'plugin', 'source', 'target'] as $option) {
+            if (isset($config[$option])) {
+                $options[] = $option . ' "'.$config[$option].'"';
+            }
+        }
+
+        return implode(', ', $options);
     }
 
     /**
      * @return array
      */
-    public function getConfig(): array
+    public function getConfigs(): array
     {
         return $this->getConfigReader()->getConfig();
     }
@@ -125,12 +221,4 @@ class Migrator
     {
         return $this->configReader;
     }
-
-    /**
-     * @return FixtureManager
-     */
-    protected function getFixtureManager(): FixtureManager
-    {
-        return $this->fixtureManager;
-    }
-}
+}

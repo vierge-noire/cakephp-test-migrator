@@ -30,6 +30,8 @@ The `Migrator`approach presents the following advantages:
 * it eases the maintenance of your tests, since regular and test DBs are managed the same way,
 * it indirectly tests your migrations.
 
+You may pass `true` as the second argument for a verbose output on the console. 
+
 ### Multiple migrations settings
 
 You can pass the various migrations directly in the Migrator instantiation:
@@ -39,7 +41,7 @@ You can pass the various migrations directly in the Migrator instantiation:
     ['plugin' => 'FooPlugin', 'connection' => 'FooConnection'],      
     ['source' => 'BarFolder'],
     ...
- ]);
+ ], true);
 ```
 
 You can also pass the various migrations directly in your Datasource configuration, under the key `migrations`:
@@ -69,16 +71,33 @@ If you ever switched to a branch with nonexistent up migrations, you've moved to
 The `Migrator` will automatically drop the tables where needed, and re-run the migrations. Switching branches therefore
 does not require any intervention on your side.
 
-### What happens if my migrations insert data in the DB
+### What if I do not use migrations?
 
-It is quite common, that migrations insert data within migrations, for example if you need to insert a role `admin`. It is therefore probably needed to clean your test DB after the migrations were run. In order to do so, you may run the following command after the migration were run in `tests/bootstrap.php`, assuming that the data was inserted on the connection `test`:
+The `Migrator::dump()` will help you import any schema from one or several sql file. Run for example:
+
 ```$xslt
-SnifferRegistry::get('test')->markAllTablesAsDirty();
+Migrator::dump('test', 'path/to/file.sql')
 ```
+or with multiples files
+```$xslt
+Migrator::dump('test', [
+    'path1/to/file1.sql',
+    'path2/to/file2.sql',
+])
+```
+or for a verbose output
+```$xslt
+Migrator::dump('test', 'path/to/file.sql', true)
+```
+
+The first argument is the name of the connection, the second the file(s) to dump, the third the verbosity (boolean).
+
+This method will however drop the schema prior to recreating it, which presents a significant loss of
+performance in comparison to the migration-based solution.
  
 ### Trouble shooting
 
-It might be required, right after you installed the plugin, to drop and recreate your test database. If the problem persists, feel free to open an issue.
+It might be required, right after you installed or updated the plugin, to drop and recreate your test database. If the problem persists, feel free to open an issue.
 
 ## Authors
 * Juan Pablo Ramirez
