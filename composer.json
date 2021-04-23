@@ -10,10 +10,10 @@
   ],
   "minimum-stability": "dev",
   "require": {
-    "cakephp/migrations": "^2.3",
-    "vierge-noire/cakephp-test-suite-light": "^1.1"
+    "cakephp/cakephp": "^3.6"
   },
   "require-dev": {
+    "cakephp/migrations": "^2.3",
     "josegonzalez/dotenv": "dev-master",
     "phpunit/phpunit": "^6.1"
   },
@@ -24,7 +24,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "CakephpTestMigrator\\Test\\": "tests"
+      "CakephpTestMigrator\\Test\\": "tests",
+      "MigratorTestApp\\": "tests\\TestApp\\src"
     }
   },
   "scripts": {

@@ -6,15 +6,14 @@ declare(strict_types=1);
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) 2020 Juan Pablo Ramirez and Nicolas Masson
- * @link          https://webrider.de/
- * @since         1.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright Copyright (c) 2020 Juan Pablo Ramirez and Nicolas Masson
+ * @link      https://webrider.de/
+ * @since     1.0.0
+ * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace CakephpTestMigrator\Test\TestCase;
 
 
-use Cake\Core\Configure;
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\ConfigReader;
 use CakephpTestSuiteLight\FixtureManager;
@@ -48,30 +47,20 @@ class ConfigReaderTest extends TestCase
             ['plugin' => 'Bar', 'connection' => 'test',]
         ];
 
-        $this->ConfigReader->prepareConfig($config);
+        $this->ConfigReader->readConfig($config);
 
         $this->assertSame($expect, $this->ConfigReader->getConfig());
     }
 
-    public function testSetConfigWithConfigure()
+    public function testSetConfigFromEmptyInjection()
     {
-        $config = [
-            'source' => 'FooTestSetConfigWithConfigure',
-            'plugin' => 'BarTestSetConfigWithConfigure'
+        $expect = [
+            ['connection' => 'test']
         ];
-        $expect = [[
-            'source' => 'FooTestSetConfigWithConfigure',
-            'plugin' => 'BarTestSetConfigWithConfigure',
-            'connection' => 'test',
-        ]];
 
-        Configure::write('TestFixtureMigrations', $config);
-
-        $this->ConfigReader->prepareConfig();
+        $this->ConfigReader->readConfig();
 
         $this->assertSame($expect, $this->ConfigReader->getConfig());
-
-        Configure::delete('TestFixtureMigrations');
     }
 
     public function testSetConfigWithConfigureAndInjection()
@@ -81,23 +70,15 @@ class ConfigReaderTest extends TestCase
             'plugin' => 'Bar1_testSetConfigWithConfigureAndInjection'
         ];
 
-        $config2 = [
-            'connection' => 'Foo2_testSetConfigWithConfigureAndInjection',
-            'plugin' => 'Bar2_testSetConfigWithConfigureAndInjection'
-        ];
-
-        Configure::write('TestFixtureMigrations', $config2);
-
-        $this->ConfigReader->prepareConfig($config1);
+        $this->ConfigReader->readConfig($config1);
         $this->assertSame([$config1], $this->ConfigReader->getConfig());
-
-        Configure::delete('TestFixtureMigrations');
     }
 
     public function testReadMigrationsInDatasource()
     {
-        $fm = new FixtureManager();
-        $this->ConfigReader->readMigrationsInDatasources($fm);
+        $this->ConfigReader->readMigrationsInDatasources();
+        // Read empty config will not overwrite Datasource config
+        $this->ConfigReader->readConfig();
         $act = $this->ConfigReader->getConfig();
         $expected = [
             ['source' => 'FooSource', 'connection' => 'test'],
@@ -108,7 +89,20 @@ class ConfigReaderTest extends TestCase
         $this->assertSame($expected, $act);
     }
 
-    public function arrays()
+
+    public function testReadMigrationsInDatasourceAndInjection()
+    {
+        $this->ConfigReader->readMigrationsInDatasources();
+        // Read non-empty config will overwrite Datasource config
+        $this->ConfigReader->readConfig(['source' => 'Foo']);
+        $act = $this->ConfigReader->getConfig();
+        $expected = [
+            ['source' => 'Foo', 'connection' => 'test'],
+        ];
+        $this->assertSame($expected, $act);
+    }
+
+    public function arrays(): array
     {
         return [
             [['a' => 'b'], [['a' => 'b']]],
@@ -119,8 +113,10 @@ class ConfigReaderTest extends TestCase
 
     /**
      * @dataProvider arrays
+     * @param        array $input
+     * @param        array $expect
      */
-    public function testNormalizeArray($input, $expect)
+    public function testNormalizeArray(array $input, array $expect)
     {
         $this->ConfigReader->normalizeArray($input);
         $this->assertSame($expect, $input);
