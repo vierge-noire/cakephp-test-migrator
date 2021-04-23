@@ -37,8 +37,8 @@ You may pass `true` as the second argument for a verbose output on the console.
 You can pass the various migrations directly in the Migrator instantiation:
 ```$xslt
 \CakephpTestMigrator\Migrator::migrate([
-    ['connection' => 'test'],       
-    ['plugin' => 'FooPlugin'],      
+    ['connection' => 'test', 'source' => 'TestFolder'],       
+    ['plugin' => 'FooPlugin', 'connection' => 'FooConnection'],      
     ['source' => 'BarFolder'],
     ...
  ], true);
@@ -94,15 +94,26 @@ The first argument is the name of the connection, the second the file(s) to dump
 
 This method will however drop the schema prior to recreating it, which presents a significant loss of
 performance in comparison to the migration-based solution.
+ 
+### Trouble shooting
+
+It might be required, right after you installed or updated the plugin, to drop and recreate your test database. If the problem persists, feel free to open an issue.
+
+## Authors
+* Juan Pablo Ramirez
+* Nicolas Masson
+
+
+## Support
+Contact us at vierge.noire.info@gmail.com for professional assistance.
+
+You like our work? [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L3L52P9JA)
+
 
 ## License
 
-The CakePHPFixtureFactories plugin is offered under an [MIT license](https://opensource.org/licenses/mit-license.php).
+The CakephpTestMigrator plugin is offered under an [MIT license](https://opensource.org/licenses/mit-license.php).
 
 Copyright 2020 Juan Pablo Ramirez and Nicolas Masson
 
 Licensed under The MIT License Redistributions of files must retain the above copyright notice.
-
-## Author
-* Juan Pablo Ramirez
-* Nicolas Masson
