@@ -71,7 +71,7 @@ class SchemaCleaner
      */
     public function truncate(string $connectionName)
     {
-        $this->info('Truncating all tables for connection ' . $connectionName);
+        $this->info("Truncating all tables for connection {$connectionName}.");
 
         $stmts = [];
         $schema = $this->getSchema($connectionName);
