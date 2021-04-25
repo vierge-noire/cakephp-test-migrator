@@ -46,7 +46,7 @@ class SchemaCleaner
      */
     public function drop(string $connectionName)
     {
-        $this->info('Dropping all tables for connection ' . $connectionName);
+        $this->info("Dropping all tables for connection {$connectionName}.");
 
         $schema = $this->getSchema($connectionName);
         $dialect = $this->getDialect($connectionName);
