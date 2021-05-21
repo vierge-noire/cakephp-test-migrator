@@ -17,18 +17,21 @@ namespace CakephpTestMigrator\Test\TestCase;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
+use Cake\Utility\Hash;
 use CakephpTestMigrator\Migrator;
 
 class MigratorTest extends TestCase
 {
     private function fetchMigrationsInDB(string $dbTable): array
     {
-        return ConnectionManager::get('test')
+        $result = ConnectionManager::get('test')
             ->newQuery()
             ->select('migration_name')
             ->from($dbTable)
             ->execute()
-            ->fetch();
+            ->fetchAll();
+
+        return (array)Hash::extract($result, '{n}.0');
     }
 
     public function testGetConfigFromDatasource(): void
@@ -52,7 +55,7 @@ class MigratorTest extends TestCase
         $fooPluginMigrations = $this->fetchMigrationsInDB('foo_plugin_phinxlog');
         $barPluginMigrations = $this->fetchMigrationsInDB('bar_plugin_phinxlog');
 
-        $this->assertSame(['AppMigration'], $appMigrations);
+        $this->assertSame(['AddArticles', 'PopulateArticles', 'CreateView'], $appMigrations);
         $this->assertSame(['FooMigration'], $fooPluginMigrations);
         $this->assertSame(['BarMigration'], $barPluginMigrations);
     }
@@ -70,10 +73,10 @@ class MigratorTest extends TestCase
         $connection->insert('phinxlog', ['version' => 1, 'migration_name' => 'foo',]);
 
         $count = $connection->newQuery()->select('version')->from('phinxlog')->execute()->count();
-        $this->assertSame(2, $count);
+        $this->assertSame(4, $count);
 
         Migrator::migrate();
         $count = $connection->newQuery()->select('version')->from('phinxlog')->execute()->count();
-        $this->assertSame(1, $count);
+        $this->assertSame(3, $count);
     }
 }
