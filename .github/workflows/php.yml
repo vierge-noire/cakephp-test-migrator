@@ -13,15 +13,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['7.0', '7.2', '7.4']
-        db-type: [mysql]
-        composer-type: [lowest, stable, dev]
+        php-version: ['7.4']
+        db-type: [mysql, pgsql]
+        composer-type: [stable, dev]
 
     name: PHP ${{ matrix.php-version }} & ${{ matrix.db-type }} & ${{ matrix.composer-type }}
+
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: test_migrator
+          POSTGRES_PASSWORD: root
+          POSTGRES_USER: root
 
     steps:
       - uses: actions/checkout@v2
