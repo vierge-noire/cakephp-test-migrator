@@ -16,7 +16,6 @@ namespace CakephpTestMigrator\Test\TestCase;
 
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\ConfigReader;
-use CakephpTestSuiteLight\FixtureManager;
 
 class ConfigReaderTest extends TestCase
 {
