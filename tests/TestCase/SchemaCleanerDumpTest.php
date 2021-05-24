@@ -43,23 +43,20 @@ class SchemaCleanerDumpTest extends TestCase
     public function testDropSchema()
     {
         $connection = ConnectionManager::get('test');
-        /** @var SchemaDialect $dialect */
-        $dialect = $connection->getDriver()->schemaDialect();
 
         $this->createSchemas();
 
-        $stmt = $dialect->listTablesSql($connection->config());
-        $tables = $connection->execute($stmt[0])->fetch();
+        $tables = (new SchemaCleaner())->listTables($connection);
 
         // Assert that the schema is not empty
-        $this->assertSame(['test_table'], $tables, 'The schema should not be empty.');
+        $this->assertSame(['test_table', 'test_table2'], $tables, 'The schema should not be empty.');
 
         // Drop the schema
         (new SchemaCleaner())->drop('test');
 
         // Schema is empty
-        $tables = $connection->execute($stmt[0])->count();
-        $this->assertSame(0, $tables, 'The schema should be empty.');
+        $tables = (new SchemaCleaner())->listTables($connection);
+        $this->assertSame([], $tables, 'The schema should be empty.');
     }
 
     public function testTruncateSchema()

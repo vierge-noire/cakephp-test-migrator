@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace CakephpTestMigrator;
 
 use Cake\Console\ConsoleIo;
-use Cake\Database\Schema\BaseSchema;
-use Cake\Database\Schema\Collection;
+use Cake\Database\Driver\Mysql;
+use Cake\Database\Driver\Postgres;
+use Cake\Database\DriverInterface;
 use Cake\Database\Schema\TableSchema;
 use Cake\Datasource\ConnectionInterface;
 use Cake\Datasource\ConnectionManager;
+use Cake\Utility\Hash;
 
 class SchemaCleaner
 {
@@ -46,16 +48,16 @@ class SchemaCleaner
      */
     public function drop(string $connectionName)
     {
-        $this->info('Dropping all tables for connection ' . $connectionName);
+        $this->info("Dropping all tables for connection {$connectionName}.");
 
-        $schema = $this->getSchema($connectionName);
-        $dialect = $this->getDialect($connectionName);
-
+        $connection = ConnectionManager::get($connectionName);
         $stmts = [];
-        foreach ($schema->listTables() as $table) {
-            $table = $schema->describe($table);
+        foreach ($this->listTables($connection) as $table) {
+            $table = $connection->getSchemaCollection()->describe($table);
             if ($table instanceof TableSchema) {
-                $stmts = array_merge($stmts, $dialect->dropTableSql($table));
+                /** @var DriverInterface $driver */
+                $driver = $connection->getDriver();
+                $stmts = array_merge($stmts, $driver->schemaDialect()->dropTableSql($table));
             }
         }
 
@@ -73,19 +75,42 @@ class SchemaCleaner
     {
         $this->info("Truncating all tables for connection {$connectionName}.");
 
+        $connection = ConnectionManager::get($connectionName);
         $stmts = [];
-        $schema = $this->getSchema($connectionName);
-        $dialect = $this->getDialect($connectionName);
-        $tables = $schema->listTables();
+        $tables = $this->listTables($connection);
         $tables = $this->unsetMigrationTables($tables);
         foreach ($tables as $table) {
-            $table = $schema->describe($table);
+            $table = $connection->getSchemaCollection()->describe($table);
             if ($table instanceof TableSchema) {
-                $stmts = array_merge($stmts, $dialect->truncateTableSql($table));
+                /** @var DriverInterface $driver */
+                $driver = $connection->getDriver();
+                $stmts = array_merge($stmts, $driver->schemaDialect()->truncateTableSql($table));
             }
         }
 
-        $this->executeStatements(ConnectionManager::get($connectionName), $stmts);
+        $this->executeStatements($connection, $stmts);
+    }
+
+    /**
+     * List sall tables, without views.
+     *
+     * @param ConnectionInterface $connection Connection.
+     * @return array
+     */
+    public function listTables(ConnectionInterface $connection): array
+    {
+        $driver = $connection->getDriver();
+        if ($driver instanceof Mysql) {
+            $query = 'SHOW FULL TABLES WHERE Table_Type != "VIEW"';
+        } elseif ($driver instanceof Postgres) {
+            $query = "SELECT tablename AS TABLE FROM pg_tables WHERE schemaname = 'public'";
+        } else {
+            return $connection->getSchemaCollection()->listTables();
+        }
+
+        $result = $connection->execute($query)->fetchAll();
+
+        return (array)Hash::extract($result, '{n}.0');
     }
 
     /**
@@ -136,24 +161,5 @@ class SchemaCleaner
         }
 
         return array_values($tables);
-    }
-
-    /**
-     * @param  string $connectionName name of the connection.
-     * @return \Cake\Database\Schema\Collection
-     */
-    protected function getSchema(string $connectionName): Collection
-    {
-        return ConnectionManager::get($connectionName)->getSchemaCollection();
-    }
-
-    /**
-     * @param  string $connectionName Name of the connection.
-     * @return \Cake\Database\Schema\BaseSchema
-     */
-    protected function getDialect(string $connectionName): BaseSchema
-    {
-        /** @phpstan-ignore-next-line */
-        return ConnectionManager::get($connectionName)->getDriver()->schemaDialect();
     }
 }
