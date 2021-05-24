@@ -72,7 +72,7 @@ class ConfigReader
         return $this;
     }
 
-    public function processConfig()
+    public function processConfig(): void
     {
         foreach ($this->config as $k => $config) {
             $this->config[$k]['connection'] = $this->config[$k]['connection'] ?? 'test';

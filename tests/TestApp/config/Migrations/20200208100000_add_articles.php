@@ -12,10 +12,9 @@ declare(strict_types=1);
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
-use Cake\ORM\TableRegistry;
 use Migrations\AbstractMigration;
 
-class AppMigration extends AbstractMigration
+class AddArticles extends AbstractMigration
 {
     public function up()
     {
@@ -29,9 +28,5 @@ class AppMigration extends AbstractMigration
             )
             ->addTimestamps('created', 'modified')
             ->create();
-
-        $Articles = TableRegistry::getTableLocator()->get('Articles');
-        $article = $Articles->newEntity(['title' => 'foo']);
-        $Articles->saveOrFail($article);
     }
 }
