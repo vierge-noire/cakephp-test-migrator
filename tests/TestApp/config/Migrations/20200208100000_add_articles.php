@@ -15,7 +15,7 @@ declare(strict_types=1);
 use Cake\ORM\TableRegistry;
 use Migrations\AbstractMigration;
 
-class AppMigration extends AbstractMigration
+class AddArticles extends AbstractMigration
 {
     public function up(): void
     {
@@ -29,9 +29,5 @@ class AppMigration extends AbstractMigration
             )
             ->addTimestamps('created', 'modified')
             ->create();
-
-        $Articles = TableRegistry::getTableLocator()->get('Articles');
-        $article = $Articles->newEntity(['title' => 'foo']);
-        $Articles->saveOrFail($article);
     }
 }
