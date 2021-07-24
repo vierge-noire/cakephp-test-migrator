@@ -19,6 +19,7 @@ use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
 use Cake\Utility\Hash;
 use CakephpTestMigrator\Migrator;
+use CakephpTestMigrator\SchemaCleaner;
 
 class MigratorTest extends TestCase
 {
@@ -58,6 +59,33 @@ class MigratorTest extends TestCase
         $this->assertSame(['AddArticles', 'PopulateArticles', 'CreateView'], $appMigrations);
         $this->assertSame(['FooMigration'], $fooPluginMigrations);
         $this->assertSame(['BarMigration'], $barPluginMigrations);
+    }
+
+    public function testGetConnectionsWithModifiedStatus(): void
+    {
+        $connections = [
+            'test',
+            'test_2',
+            'test_3',
+        ];
+
+        // Run the migrations once to make sure that all are up to date.
+        Migrator::migrate();
+
+        // Status did not changed.
+        $migrator = Migrator::migrate();
+        $this->assertSame([], $migrator->getConnectionsWithModifiedStatus());
+
+        // Drop all connections' tables. Statuses are reset.
+        $cleaner = new SchemaCleaner();
+        foreach ($connections as $connection) {
+            $cleaner->drop($connection);
+        }
+
+        // All connections were touched by the migrations.
+        $migrator = Migrator::migrate();
+        $connectionsWithModifiedStatus = $migrator->getConnectionsWithModifiedStatus();
+        $this->assertSame($connections, $connectionsWithModifiedStatus);
     }
 
     public function testTableRegistryConnectionName(): void
