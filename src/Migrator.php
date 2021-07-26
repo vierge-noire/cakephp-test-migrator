@@ -31,6 +31,11 @@ class Migrator
     protected $io;
 
     /**
+     * @var string[]
+     */
+    protected $connectionsWithModifiedStatus = [];
+
+    /**
      * Migrator constructor.
      * @param bool $verbose
      * @param null $configReader
@@ -132,26 +137,25 @@ class Migrator
     protected function handleMigrationsStatus(): self
     {
         $schemaCleaner = new SchemaCleaner($this->io);
-        $connectionsToDrop = [];
         foreach ($this->getConfigs() as &$config) {
             $connectionName = $config['connection'] = $config['connection'] ?? 'test';
             $this->io->info("Reading migrations status for {$this->stringifyConfig($config)}...");
             $migrations = new Migrations($config);
             if ($this->isStatusChanged($migrations)) {
-                if (!in_array($connectionName, $connectionsToDrop))
+                if (!in_array($connectionName, $this->connectionsWithModifiedStatus))
                 {
-                    $connectionsToDrop[] = $connectionName;
+                    $this->connectionsWithModifiedStatus[] = $connectionName;
                 }
             }
         }
 
-        if (empty($connectionsToDrop)) {
+        if (empty($this->connectionsWithModifiedStatus)) {
             $this->io->success("No migration changes detected.");
 
             return $this;
         }
 
-        foreach ($connectionsToDrop as $connectionName) {
+        foreach ($this->connectionsWithModifiedStatus as $connectionName) {
             $schemaCleaner->drop($connectionName);
         }
 
@@ -159,7 +163,7 @@ class Migrator
             $this->runMigrations($config);
         }
 
-        foreach ($connectionsToDrop as $connectionName) {
+        foreach ($this->connectionsWithModifiedStatus as $connectionName) {
             $schemaCleaner->truncate($connectionName);
         }
 
@@ -220,5 +224,16 @@ class Migrator
     protected function getConfigReader(): ConfigReader
     {
         return $this->configReader;
+    }
+
+    /**
+     * Returns an array of strings with all the connections
+     * which migration status have changed and were migrated.
+     *
+     * @return string[]
+     */
+    public function getConnectionsWithModifiedStatus(): array
+    {
+        return $this->connectionsWithModifiedStatus;
     }
 }
