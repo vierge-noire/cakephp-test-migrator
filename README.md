@@ -65,6 +65,17 @@ In config/app.php
 
 You can set `migrations` simply to `true` if you which to use the default migration settings. 
 
+### Migrations status
+
+Information on a connection's migration status will be obtained as follows:
+```
+$migrator = Migrator::migrate();
+$connectionsWithModifiedStatus = $migrator->getConnectionsWithModifiedStatus();
+```
+
+the method `getConnectionsWithModifiedStatus` returning a list of the connections with down
+migrations prior to running the migrations.
+
 ### What happens if I switch branches?
 
 If you ever switched to a branch with nonexistent up migrations, you've moved to a branch in a past state.
