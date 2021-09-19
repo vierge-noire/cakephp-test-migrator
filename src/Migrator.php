@@ -147,13 +147,13 @@ class Migrator
     /**
      * Truncates connections on demand.
      *
-     * @param string[] $connections Connections names to truncate. Defaults to modified connections
+     * @param string[]|null $connections Connections names to truncate. Defaults to modified connections
      * @return void
      */
-    public function truncate(array $connections = []): void
+    public function truncate(?array $connections = null): void
     {
-        if (count($connections) === 0) {
-            $connections = $this->connectionsWithModifiedStatus;
+        if ($connections === null) {
+            $connections = $this->configReader->getActiveConnections();
         }
         $schemaCleaner = new SchemaCleaner($this->io);
         foreach ($connections as $connectionName) {
