@@ -107,4 +107,21 @@ class MigratorTest extends TestCase
         $count = $connection->newQuery()->select('version')->from('phinxlog')->execute()->count();
         $this->assertSame(3, $count);
     }
+
+    public function testMigrateWithoutTruncate(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $cleaner = new SchemaCleaner();
+        $cleaner->drop('test');
+
+        $migrator = Migrator::migrate([], ['truncate' => false]);
+
+        $count = $connection->newQuery()->select('title')->from('articles')->execute()->count();
+        $this->assertSame(1, $count);
+
+        $migrator->truncate();
+
+        $count = $connection->newQuery()->select('title')->from('articles')->execute()->count();
+        $this->assertSame(0, $count);
+    }
 }
