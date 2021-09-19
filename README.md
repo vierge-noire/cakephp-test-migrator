@@ -20,7 +20,7 @@ With the CakePHP Test Migrator, the schema of both default and test DB are handl
 
 The package proposes a tool to run your [migrations](https://book.cakephp.org/migrations/3/en/index.html) once prior to the tests. In order to do so,
 you may place the following in your `tests/bootstrap.php`:
-```$xslt
+```php
 \CakephpTestMigrator\Migrator::migrate();
 ```
 This command will ensure that your migrations are well run and keeps the test DB(s) up to date. Since tables are truncated but never dropped by the present package's fixture manager, migrations will be run strictly when needed, namely only after a new migration was created by the developer.
@@ -30,23 +30,38 @@ The `Migrator`approach presents the following advantages:
 * it eases the maintenance of your tests, since regular and test DBs are managed the same way,
 * it indirectly tests your migrations.
 
-You may pass `true` as the second argument for a verbose output on the console. 
+You may pass `true` as the second argument for a verbose output on the console.
+
+### Options
+
+| name | type | default | description |
+| ---- | ---- | ------- | ----------- |
+| verbose | *bool* | `false` | Print info about migrations done |
+| truncate | *bool* | `true` | Truncate all tables after migrations are done. You can call `truncate()` manually |
+
+You can pass a boolean as options, it will be used as `verbose`
+
+```php
+\CakephpTestMigrator\Migrator::migrate([], true);
+// is the same as
+\CakephpTestMigrator\Migrator::migrate([], ['verbose' => true]);
+```
 
 ### Multiple migrations settings
 
 You can pass the various migrations directly in the Migrator instantiation:
-```$xslt
+```php
 \CakephpTestMigrator\Migrator::migrate([
     ['connection' => 'test'],       
     ['plugin' => 'FooPlugin'],      
     ['source' => 'BarFolder'],
     ...
- ], true);
+ ], ['verbose' => true]);
 ```
 
 You can also pass the various migrations directly in your Datasource configuration, under the key `migrations`:
-```$xslt
-In config/app.php
+```php
+// In config/app.php
 'test' => [
     'className' => Connection::class,
     'driver' => Mysql::class,
@@ -68,13 +83,23 @@ You can set `migrations` simply to `true` if you which to use the default migrat
 ### Migrations status
 
 Information on a connection's migration status will be obtained as follows:
-```
+```php
 $migrator = Migrator::migrate();
 $connectionsWithModifiedStatus = $migrator->getConnectionsWithModifiedStatus();
 ```
 
 the method `getConnectionsWithModifiedStatus` returning a list of the connections with down
 migrations prior to running the migrations.
+
+### Data truncation
+
+Use **truncate** option to truncate (or not) after migrations are done. This is useful if you need to do other tasks in the test suite bootstrap
+
+```php
+$migrator = Migrator::migrate([], ['truncate' => false]);
+// do something with the migrated database (bake fixtures, etc)
+$migrator->truncate();
+```
 
 ### What happens if I switch branches?
 
@@ -86,18 +111,18 @@ does not require any intervention on your side.
 
 The `Migrator::dump()` will help you import any schema from one or several sql file. Run for example:
 
-```$xslt
+```php
 Migrator::dump('test', 'path/to/file.sql')
 ```
 or with multiples files
-```$xslt
+```php
 Migrator::dump('test', [
     'path1/to/file1.sql',
     'path2/to/file2.sql',
 ])
 ```
 or for a verbose output
-```$xslt
+```php
 Migrator::dump('test', 'path/to/file.sql', true)
 ```
 
