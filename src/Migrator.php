@@ -55,17 +55,32 @@ class Migrator
      * General command to run before your tests run
      * E.g. in tests/bootstrap.php
      *
+     * Options:
+     * - verbose | bool | Set to true to display messages
+     * - truncate | bool | Truncate tables after migrations are done.
+     *
      * @param array $config
-     * @param bool  $verbose Set to true to display messages
+     * @param array{verbose?:bool,truncate?:bool}|bool $options Options for migrations
      * @return Migrator
      */
-    public static function migrate(array $config = [], $verbose = false): Migrator
+    public static function migrate(array $config = [], $options = []): Migrator
     {
-        $migrator = new static($verbose);
+        if ($options === true || $options === false) {
+            $options = ['verbose' => $options];
+        }
+        $options += [
+            'verbose' => false,
+            'truncate' => true,
+        ];
+        $migrator = new static($options['verbose']);
 
         $migrator->configReader->readMigrationsInDatasources();
         $migrator->configReader->readConfig($config);
         $migrator->handleMigrationsStatus();
+
+        if ($options['truncate']) {
+            $migrator->truncate();
+        }
 
         return $migrator;
     }
@@ -130,6 +145,23 @@ class Migrator
     }
 
     /**
+     * Truncates connections on demand.
+     *
+     * @param string[]|null $connections Connections names to truncate. Defaults to modified connections
+     * @return void
+     */
+    public function truncate(?array $connections = null): void
+    {
+        if ($connections === null) {
+            $connections = $this->configReader->getActiveConnections();
+        }
+        $schemaCleaner = new SchemaCleaner($this->io);
+        foreach ($connections as $connectionName) {
+            $schemaCleaner->truncate($connectionName);
+        }
+    }
+
+    /**
      * If a migration is missing or down, all tables of the considered connection are dropped.
      *
      * @return $this
@@ -161,10 +193,6 @@ class Migrator
 
         foreach ($this->getConfigs() as $config) {
             $this->runMigrations($config);
-        }
-
-        foreach ($this->connectionsWithModifiedStatus as $connectionName) {
-            $schemaCleaner->truncate($connectionName);
         }
 
         return $this;
