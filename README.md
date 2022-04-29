@@ -10,6 +10,9 @@ composer require --dev vierge-noire/cakephp-test-migrator "^1.0"
 #### For CakePHP 4.x
 composer require --dev vierge-noire/cakephp-test-migrator "^2.0"
 
+#### For CakePHP 4.3+
+The migrator was integrated into the migration plugin (see the [doc](https://book.cakephp.org/migrations/3/en/index.html#using-migrations-for-tests)). The present package will not be further maintained. 
+
 ### Introduction
 
 CakePHP fixtures handle the test DB schema in a paralell manner to the default DB. On the one hand you will write migrations for your default DB. On the other hand you either hard coded describe the schema structure in your fixtures, or meme the default DB. The later is simpler, but it forces you to have two DBs. And in CI tools, you will have to run the migrations on your default DB, and the fixtures meme the default DB. So why not running migrations directly on the test DB?
