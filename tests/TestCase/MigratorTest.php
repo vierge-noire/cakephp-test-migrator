@@ -26,7 +26,7 @@ class MigratorTest extends TestCase
     private function fetchMigrationsInDB(string $dbTable): array
     {
         $result = ConnectionManager::get('test')
-            ->newQuery()
+            ->selectQuery()
             ->select('migration_name')
             ->from($dbTable)
             ->execute()
@@ -100,11 +100,11 @@ class MigratorTest extends TestCase
         $connection = ConnectionManager::get('test');
         $connection->insert('phinxlog', ['version' => 1, 'migration_name' => 'foo',]);
 
-        $count = $connection->newQuery()->select('version')->from('phinxlog')->execute()->count();
+        $count = $connection->selectQuery()->select('version')->from('phinxlog')->execute()->rowCount();
         $this->assertSame(4, $count);
 
         Migrator::migrate();
-        $count = $connection->newQuery()->select('version')->from('phinxlog')->execute()->count();
+        $count = $connection->selectQuery()->select('version')->from('phinxlog')->execute()->rowCount();
         $this->assertSame(3, $count);
     }
 
@@ -116,12 +116,12 @@ class MigratorTest extends TestCase
 
         $migrator = Migrator::migrate([], ['truncate' => false]);
 
-        $count = $connection->newQuery()->select('title')->from('articles')->execute()->count();
+        $count = $connection->selectQuery()->select('title')->from('articles')->execute()->rowCount();
         $this->assertSame(1, $count);
 
         $migrator->truncate();
 
-        $count = $connection->newQuery()->select('title')->from('articles')->execute()->count();
+        $count = $connection->selectQuery()->select('title')->from('articles')->execute()->rowCount();
         $this->assertSame(0, $count);
     }
 }

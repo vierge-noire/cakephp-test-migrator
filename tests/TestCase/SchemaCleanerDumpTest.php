@@ -29,11 +29,11 @@ class SchemaCleanerDumpTest extends TestCase
         $this->createSchemas();
         $this->assertSame(
             1,
-            $connection->newQuery()->select('id')->from('test_table')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table')->execute()->rowCount()
         );
         $this->assertSame(
             1,
-            $connection->newQuery()->select('id')->from('test_table2')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table2')->execute()->rowCount()
         );
 
         $this->expectException(\PDOException::class);
@@ -69,11 +69,11 @@ class SchemaCleanerDumpTest extends TestCase
 
         $this->assertSame(
             0,
-            $connection->newQuery()->select('id')->from('test_table')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table')->execute()->rowCount()
         );
         $this->assertSame(
             0,
-            $connection->newQuery()->select('id')->from('test_table2')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table2')->execute()->rowCount()
         );
     }
 
@@ -131,7 +131,7 @@ class SchemaCleanerDumpTest extends TestCase
 
         $connection->insert('test_table', ['name' => 'foo']);
 
-        $id = $connection->newQuery()->select('id')->from('test_table')->limit(1)->execute()->fetch()[0];
+        $id = $connection->selectQuery()->select('id')->from('test_table')->limit(1)->execute()->fetch()[0];
         $connection->insert('test_table2', ['name' => 'foo', 'fk_id' => $id]);
 
         $connection->execute($connection->getDriver()->enableForeignKeySQL());

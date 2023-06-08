@@ -35,19 +35,23 @@ class ConfigReader
             $connection = ConnectionManager::getConfig($connectionName);
             $config = [];
 
-            if (isset($connection['migrations'])) {
-                if ($connection['migrations'] === true) {
-                    $config = ['connection' => $connectionName ];
-                    $this->normalizeArray($config);
-                } elseif (is_array($connection['migrations'])) {
-                    $config = $connection['migrations'];
-                    $this->normalizeArray($config);
-                    foreach ($config as $k => $v) {
-                        $config[$k]['connection'] = $config[$k]['connection'] ?? $connectionName;
-                    }
+            if (is_array($connection)) {
+              $migrations = $connection['migrations'] ?? false;
+
+              if ($migrations) {
+                if ($migrations === true) {
+                  $config = ['connection' => $connectionName ];
+                  $this->normalizeArray($config);
+                } elseif (is_array($migrations)) {
+                  $config = $migrations;
+                  $this->normalizeArray($config);
+                  foreach ($config as $k => $v) {
+                    $config[$k]['connection'] = $v['connection'] ?? $connectionName;
+                  }
 
                 }
                 $this->config = array_merge($this->config, $config);
+              }
             }
         }
 

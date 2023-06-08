@@ -101,7 +101,7 @@ class ConfigReaderTest extends TestCase
         $this->assertSame($expected, $act);
     }
 
-    public function arrays(): array
+    public static function arrays(): array
     {
         return [
             [['a' => 'b'], [['a' => 'b']]],

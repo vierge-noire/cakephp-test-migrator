@@ -1,5 +1,6 @@
 <?php
 
+use function Cake\Core\env;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Datasource\ConnectionManager;
@@ -62,7 +63,6 @@ $cacheConfig = [
 
 Cache::setConfig('_cake_model_', $cacheConfig);
 Cache::setConfig('_cake_core_', $cacheConfig);
-
 
 $dbConnection = [
     'className' => 'Cake\Database\Connection',

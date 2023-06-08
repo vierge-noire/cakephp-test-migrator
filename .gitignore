@@ -1,7 +1,7 @@
 .idea
 /composer.lock
 /vendor/
-/.phpunit.result.cache
+/.phpunit.cache
 **/test_migrator
 tests/.env
 /tmp

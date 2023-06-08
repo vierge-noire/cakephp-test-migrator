@@ -16,7 +16,6 @@ namespace CakephpTestMigrator;
 use Cake\Console\ConsoleIo;
 use Cake\Database\Driver\Mysql;
 use Cake\Database\Driver\Postgres;
-use Cake\Database\DriverInterface;
 use Cake\Database\Schema\TableSchema;
 use Cake\Datasource\ConnectionInterface;
 use Cake\Datasource\ConnectionManager;
@@ -55,7 +54,6 @@ class SchemaCleaner
         foreach ($this->listTables($connection) as $table) {
             $table = $connection->getSchemaCollection()->describe($table);
             if ($table instanceof TableSchema) {
-                /** @var DriverInterface $driver */
                 $driver = $connection->getDriver();
                 $stmts = array_merge($stmts, $driver->schemaDialect()->dropTableSql($table));
             }
@@ -75,6 +73,7 @@ class SchemaCleaner
     {
         $this->info("Truncating all tables for connection {$connectionName}.");
 
+        /** @var \Cake\Database\Connection $connection */
         $connection = ConnectionManager::get($connectionName);
         $stmts = [];
         $tables = $this->listTables($connection);
@@ -82,7 +81,6 @@ class SchemaCleaner
         foreach ($tables as $table) {
             $table = $connection->getSchemaCollection()->describe($table);
             if ($table instanceof TableSchema) {
-                /** @var DriverInterface $driver */
                 $driver = $connection->getDriver();
                 $stmts = array_merge($stmts, $driver->schemaDialect()->truncateTableSql($table));
             }
@@ -124,7 +122,7 @@ class SchemaCleaner
      */
     protected function executeStatements(ConnectionInterface $connection, array $commands): void
     {
-        $connection->disableConstraints(function ($connection) use ($commands) {
+        $connection->disableConstraints(function (ConnectionInterface $connection) use ($commands) {
             $connection->transactional(function (ConnectionInterface $connection) use ($commands) {
                 foreach ($commands as $sql) {
                     $connection->execute($sql);

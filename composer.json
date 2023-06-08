@@ -9,14 +9,15 @@
     }
   ],
   "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
-    "cakephp/cakephp": "^4.0"
+    "cakephp/cakephp": "5.x-dev"
   },
   "require-dev": {
-    "cakephp/cakephp-codesniffer": "^4.0",
-    "cakephp/migrations": "^3.1",
+    "cakephp/cakephp-codesniffer": "^5.1",
+    "cakephp/migrations": "4.x-dev as 4.0.0",
     "josegonzalez/dotenv": "dev-master",
-    "phpunit/phpunit": "^8.0"
+    "phpunit/phpunit": "^10.1"
   },
   "autoload": {
     "psr-4": {
@@ -36,9 +37,13 @@
     "pgsql": "bash run_tests.sh Postgres",
     "sqlite": "bash run_tests.sh Sqlite",
     "phpstan": "./vendor/bin/phpstan analyse --memory-limit=-1",
-    "stan-setup": "cp composer.json composer.backup && composer require --dev phpstan/phpstan:0.12.88 && mv composer.backup composer.json"
+    "phpstan-baseline": "./vendor/bin/phpstan --generate-baseline",
+    "stan-setup": "cp composer.json composer.backup && composer require --dev phpstan/phpstan:1.10.18 && mv composer.backup composer.json"
   },
   "config": {
-    "sort-packages": true
+    "sort-packages": true,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
   }
 }
