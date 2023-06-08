@@ -13,7 +13,6 @@ declare(strict_types=1);
  */
 namespace CakephpTestMigrator\Test\TestCase;
 
-
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;

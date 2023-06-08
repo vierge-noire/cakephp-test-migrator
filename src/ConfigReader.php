@@ -13,7 +13,6 @@ declare(strict_types=1);
  */
 namespace CakephpTestMigrator;
 
-
 use Cake\Datasource\ConnectionManager;
 
 class ConfigReader
@@ -21,7 +20,7 @@ class ConfigReader
     /**
      * @var array
      */
-    private $config = [];
+    private array $config = [];
 
     /**
      * Read in the Datasources the 'migrations' key for each
@@ -29,29 +28,28 @@ class ConfigReader
      *
      * @return $this
      */
-    public function readMigrationsInDatasources(): self
+    public function readMigrationsInDatasources()
     {
         foreach ($this->getActiveConnections() as $connectionName) {
             $connection = ConnectionManager::getConfig($connectionName);
             $config = [];
 
             if (is_array($connection)) {
-              $migrations = $connection['migrations'] ?? false;
+                $migrations = $connection['migrations'] ?? false;
 
-              if ($migrations) {
-                if ($migrations === true) {
-                  $config = ['connection' => $connectionName ];
-                  $this->normalizeArray($config);
-                } elseif (is_array($migrations)) {
-                  $config = $migrations;
-                  $this->normalizeArray($config);
-                  foreach ($config as $k => $v) {
-                    $config[$k]['connection'] = $v['connection'] ?? $connectionName;
-                  }
-
+                if ($migrations) {
+                    if ($migrations === true) {
+                        $config = ['connection' => $connectionName ];
+                        $this->normalizeArray($config);
+                    } elseif (is_array($migrations)) {
+                        $config = $migrations;
+                        $this->normalizeArray($config);
+                        foreach ($config as $k => $v) {
+                            $config[$k]['connection'] = $v['connection'] ?? $connectionName;
+                        }
+                    }
+                    $this->config = array_merge($this->config, $config);
                 }
-                $this->config = array_merge($this->config, $config);
-              }
             }
         }
 
@@ -61,10 +59,10 @@ class ConfigReader
     }
 
     /**
-     * @param  string[]|array[] $config An array of migration configs
+     * @param array<string>|array<array> $config An array of migration configs
      * @return $this
      */
-    public function readConfig(array $config = []): self
+    public function readConfig(array $config = [])
     {
         if (!empty($config)) {
             $this->normalizeArray($config);
@@ -76,6 +74,11 @@ class ConfigReader
         return $this;
     }
 
+    /**
+     * Make sure config is set properly
+     *
+     * @return void
+     */
     public function processConfig(): void
     {
         foreach ($this->config as $k => $config) {
@@ -105,7 +108,6 @@ class ConfigReader
 
     /**
      * @param string $connectionName Connection name
-     *
      * @return bool
      */
     public function skipConnection(string $connectionName): bool
@@ -126,7 +128,7 @@ class ConfigReader
     /**
      * Make array an array of arrays
      *
-     * @param  array $array
+     * @param array $array
      * @return void
      */
     public function normalizeArray(array &$array): void

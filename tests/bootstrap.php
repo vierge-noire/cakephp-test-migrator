@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 
-use function Cake\Core\env;
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\Datasource\ConnectionManager;
 use josegonzalez\Dotenv\Loader;
+use function Cake\Core\env;
 
 if (!defined('DS')) {
     define('DS', DIRECTORY_SEPARATOR);
@@ -29,10 +30,10 @@ $loadEnv = function (string $fileName) {
 if (!getenv('DB_DRIVER')) {
     putenv('DB_DRIVER=Sqlite');
 }
-$driver =  getenv('DB_DRIVER');
+$driver = getenv('DB_DRIVER');
 
-if (!file_exists(TESTS . '.env')) {
-    @copy(TESTS . ".env.$driver", TESTS . '.env');
+if (file_exists(TESTS . ".env.$driver") && !file_exists(TESTS . '.env')) {
+    copy(TESTS . ".env.$driver", TESTS . '.env');
 }
 
 /**
@@ -41,12 +42,13 @@ if (!file_exists(TESTS . '.env')) {
 $loadEnv(TESTS . '.env');
 
 // Re-read the driver
-$driver =  getenv('DB_DRIVER');
+$driver = getenv('DB_DRIVER');
 echo "Using driver $driver \n";
 
 Configure::write('debug', true);
 Configure::write(
-    'App', [
+    'App',
+    [
     'namespace' => 'TestApp',
     'paths' => [
         'plugins' => [TESTS . 'Plugins' . DS],
@@ -58,7 +60,7 @@ $cacheConfig = [
     'className' => 'File',
     'path' => CACHE,
     'url' => env('CACHE_DEFAULT_URL', null),
-    'duration'=> '+2 minutes',
+    'duration' => '+2 minutes',
 ];
 
 Cache::setConfig('_cake_model_', $cacheConfig);

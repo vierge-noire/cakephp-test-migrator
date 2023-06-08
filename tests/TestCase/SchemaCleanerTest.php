@@ -13,12 +13,11 @@ declare(strict_types=1);
  */
 namespace CakephpTestMigrator\Test\TestCase;
 
-
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\SchemaCleaner;
+use Exception;
 use Migrations\Migrations;
-use MigratorTestApp\Model\Table\ArticlesTable;
 
 class SchemaCleanerTest extends TestCase
 {
@@ -50,7 +49,7 @@ class SchemaCleanerTest extends TestCase
         // Drop the schema
         (new SchemaCleaner())->drop('test');
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->Articles->find()->all();
     }
 

@@ -13,30 +13,31 @@ declare(strict_types=1);
  */
 namespace CakephpTestMigrator;
 
-
 use Cake\Console\ConsoleIo;
 use Cake\Datasource\ConnectionManager;
 use Migrations\Migrations;
+use RuntimeException;
 
 class Migrator
 {
     /**
-     * @var ConfigReader
+     * @var \CakephpTestMigrator\ConfigReader
      */
-    protected $configReader;
+    protected ConfigReader $configReader;
 
     /**
-     * @var ConsoleIo
+     * @var \Cake\Console\ConsoleIo
      */
-    protected $io;
+    protected ConsoleIo $io;
 
     /**
-     * @var string[]
+     * @var array<string>
      */
-    protected $connectionsWithModifiedStatus = [];
+    protected array $connectionsWithModifiedStatus = [];
 
     /**
      * Migrator constructor.
+     *
      * @param bool $verbose
      * @param null $configReader
      */
@@ -59,11 +60,11 @@ class Migrator
      * - verbose | bool | Set to true to display messages
      * - truncate | bool | Truncate tables after migrations are done.
      *
-     * @param array $config
+     * @param array                                    $config
      * @param array{verbose?:bool,truncate?:bool}|bool $options Options for migrations
-     * @return Migrator
+     * @return self
      */
-    public static function migrate(array $config = [], $options = []): Migrator
+    public static function migrate(array $config = [], array|bool $options = []): Migrator
     {
         if ($options === true || $options === false) {
             $options = ['verbose' => $options];
@@ -88,14 +89,14 @@ class Migrator
     /**
      * Import the schema from a file, or an array of files.
      *
-     * @param string $connectionName Connection
-     * @param string|string[] $file File to dump
-     * @param bool $verbose Set to true to display messages
+     * @param string          $connectionName Connection
+     * @param array<string>|string $file File to dump
+     * @param bool            $verbose        Set to true to display messages
      * @return void
      * @throws \Exception if the truncation failed
      * @throws \RuntimeException if the file could not be processed
      */
-    public static function dump(string $connectionName, $file, bool $verbose = false)
+    public static function dump(string $connectionName, string|array $file, bool $verbose = false): void
     {
         $files = (array)$file;
 
@@ -105,12 +106,12 @@ class Migrator
 
         foreach ($files as $file) {
             if (!file_exists($file)) {
-                throw new \RuntimeException('The file ' . $file . ' could not found.');
+                throw new RuntimeException('The file ' . $file . ' could not found.');
             }
 
             $sql = file_get_contents($file);
             if ($sql === false) {
-                throw new \RuntimeException('The file ' . $file . ' could not read.');
+                throw new RuntimeException('The file ' . $file . ' could not read.');
             }
 
             ConnectionManager::get($connectionName)->execute($sql);
@@ -126,7 +127,7 @@ class Migrator
     /**
      * Run migrations for all configured migrations.
      *
-     * @param string[] $config Migration configuration.
+     * @param array<string> $config Migration configuration.
      * @return void
      */
     protected function runMigrations(array $config): void
@@ -136,18 +137,17 @@ class Migrator
 
         $msg = 'Migrations for ' . $this->stringifyConfig($config);
 
-
         if ($result === true) {
             $this->io->success($msg . ' successfully run.');
         } else {
-            $this->io->error( $msg . ' failed.');
+            $this->io->error($msg . ' failed.');
         }
     }
 
     /**
      * Truncates connections on demand.
      *
-     * @param string[]|null $connections Connections names to truncate. Defaults to modified connections
+     * @param array<string>|null $connections Connections names to truncate. Defaults to modified connections
      * @return void
      */
     public function truncate(?array $connections = null): void
@@ -166,7 +166,7 @@ class Migrator
      *
      * @return $this
      */
-    protected function handleMigrationsStatus(): self
+    protected function handleMigrationsStatus()
     {
         $schemaCleaner = new SchemaCleaner($this->io);
         foreach ($this->getConfigs() as &$config) {
@@ -174,15 +174,14 @@ class Migrator
             $this->io->info("Reading migrations status for {$this->stringifyConfig($config)}...");
             $migrations = new Migrations($config);
             if ($this->isStatusChanged($migrations)) {
-                if (!in_array($connectionName, $this->connectionsWithModifiedStatus))
-                {
+                if (!in_array($connectionName, $this->connectionsWithModifiedStatus)) {
                     $this->connectionsWithModifiedStatus[] = $connectionName;
                 }
             }
         }
 
         if (empty($this->connectionsWithModifiedStatus)) {
-            $this->io->success("No migration changes detected.");
+            $this->io->success('No migration changes detected.');
 
             return $this;
         }
@@ -201,7 +200,7 @@ class Migrator
     /**
      * Checks if any migrations are up but missing.
      *
-     * @param  Migrations $migrations
+     * @param \Migrations\Migrations $migrations
      * @return bool
      */
     protected function isStatusChanged(Migrations $migrations): bool
@@ -209,10 +208,12 @@ class Migrator
         foreach ($migrations->status() as $migration) {
             if ($migration['status'] === 'up' && ($migration['missing'] ?? false)) {
                 $this->io->info('Missing migration(s) detected.');
+
                 return true;
             }
             if ($migration['status'] === 'down') {
                 $this->io->info('New migration(s) found.');
+
                 return true;
             }
         }
@@ -223,7 +224,7 @@ class Migrator
     /**
      * Stringify the migration parameters.
      *
-     * @param string[] $config Config array
+     * @param array<string> $config Config array
      * @return string
      */
     protected function stringifyConfig(array $config): string
@@ -231,7 +232,7 @@ class Migrator
         $options = [];
         foreach (['connection', 'plugin', 'source', 'target'] as $option) {
             if (isset($config[$option])) {
-                $options[] = $option . ' "'.$config[$option].'"';
+                $options[] = $option . ' "' . $config[$option] . '"';
             }
         }
 
@@ -247,7 +248,7 @@ class Migrator
     }
 
     /**
-     * @return ConfigReader
+     * @return \CakephpTestMigrator\ConfigReader
      */
     protected function getConfigReader(): ConfigReader
     {
@@ -258,7 +259,7 @@ class Migrator
      * Returns an array of strings with all the connections
      * which migration status have changed and were migrated.
      *
-     * @return string[]
+     * @return array<string>
      */
     public function getConnectionsWithModifiedStatus(): array
     {

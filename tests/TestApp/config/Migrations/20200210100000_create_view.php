@@ -21,7 +21,7 @@ class CreateView extends AbstractMigration
     {
         try {
             $this->execute(
-                "CREATE VIEW " . SchemaCleanerListTablesTest::VIEW_NAME . " AS SELECT '" . SchemaCleanerListTablesTest::VIEW_CONTENT . "'"
+                'CREATE VIEW ' . SchemaCleanerListTablesTest::VIEW_NAME . " AS SELECT '" . SchemaCleanerListTablesTest::VIEW_CONTENT . "'"
             );
         } catch (Throwable $e) {
             // Do nothing, the view might already exist.

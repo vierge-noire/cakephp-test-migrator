@@ -13,10 +13,8 @@ declare(strict_types=1);
  */
 namespace MigratorTestApp\Model\Table;
 
-use Cake\ORM\Query;
 use Cake\ORM\Table;
 
 class ArticlesTable extends Table
 {
-
 }

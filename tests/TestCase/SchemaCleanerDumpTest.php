@@ -9,9 +9,9 @@ declare(strict_types=1);
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
- * @since         4.3.0
- * @license       https://opensource.org/licenses/mit-license.php MIT License
+ * @copyright Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @since     4.3.0
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace CakephpTestMigrator\Test\TestCase;
 
@@ -19,6 +19,7 @@ use Cake\Database\Schema\TableSchema;
 use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\SchemaCleaner;
+use PDOException;
 
 class SchemaCleanerDumpTest extends TestCase
 {
@@ -36,7 +37,7 @@ class SchemaCleanerDumpTest extends TestCase
             $connection->selectQuery()->select('id')->from('test_table2')->execute()->rowCount()
         );
 
-        $this->expectException(\PDOException::class);
+        $this->expectException(PDOException::class);
         $connection->delete('test_table');
     }
 
@@ -98,10 +99,13 @@ class SchemaCleanerDumpTest extends TestCase
         $schema
             ->addColumn('id', 'integer')
             ->addColumn('name', 'string')
-            ->addConstraint('primary', [
+            ->addConstraint(
+                'primary',
+                [
                 'type' => TableSchema::CONSTRAINT_PRIMARY,
                 'columns' => ['id'],
-            ]);
+                ]
+            );
 
         $queries = $schema->createSql($connection);
         foreach ($queries as $sql) {
@@ -113,15 +117,21 @@ class SchemaCleanerDumpTest extends TestCase
             ->addColumn('id', 'integer')
             ->addColumn('name', 'string')
             ->addColumn('fk_id', 'integer')
-            ->addConstraint('primary', [
+            ->addConstraint(
+                'primary',
+                [
                 'type' => TableSchema::CONSTRAINT_PRIMARY,
                 'columns' => ['id'],
-            ])
-            ->addConstraint('foreign_key', [
+                ]
+            )
+            ->addConstraint(
+                'foreign_key',
+                [
                 'columns' => ['fk_id'],
                 'type' => TableSchema::CONSTRAINT_FOREIGN,
                 'references' => ['test_table', 'id', ],
-            ]);
+                ]
+            );
 
         $queries = $schema->createSql($connection);
 
