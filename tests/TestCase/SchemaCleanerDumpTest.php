@@ -9,9 +9,9 @@ declare(strict_types=1);
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
- * @since         4.3.0
- * @license       https://opensource.org/licenses/mit-license.php MIT License
+ * @copyright Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @since     4.3.0
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace CakephpTestMigrator\Test\TestCase;
 
@@ -19,6 +19,7 @@ use Cake\Database\Schema\TableSchema;
 use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\SchemaCleaner;
+use PDOException;
 
 class SchemaCleanerDumpTest extends TestCase
 {
@@ -29,14 +30,14 @@ class SchemaCleanerDumpTest extends TestCase
         $this->createSchemas();
         $this->assertSame(
             1,
-            $connection->newQuery()->select('id')->from('test_table')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table')->execute()->rowCount()
         );
         $this->assertSame(
             1,
-            $connection->newQuery()->select('id')->from('test_table2')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table2')->execute()->rowCount()
         );
 
-        $this->expectException(\PDOException::class);
+        $this->expectException(PDOException::class);
         $connection->delete('test_table');
     }
 
@@ -69,11 +70,11 @@ class SchemaCleanerDumpTest extends TestCase
 
         $this->assertSame(
             0,
-            $connection->newQuery()->select('id')->from('test_table')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table')->execute()->rowCount()
         );
         $this->assertSame(
             0,
-            $connection->newQuery()->select('id')->from('test_table2')->execute()->count()
+            $connection->selectQuery()->select('id')->from('test_table2')->execute()->rowCount()
         );
     }
 
@@ -98,10 +99,13 @@ class SchemaCleanerDumpTest extends TestCase
         $schema
             ->addColumn('id', 'integer')
             ->addColumn('name', 'string')
-            ->addConstraint('primary', [
+            ->addConstraint(
+                'primary',
+                [
                 'type' => TableSchema::CONSTRAINT_PRIMARY,
                 'columns' => ['id'],
-            ]);
+                ]
+            );
 
         $queries = $schema->createSql($connection);
         foreach ($queries as $sql) {
@@ -113,15 +117,21 @@ class SchemaCleanerDumpTest extends TestCase
             ->addColumn('id', 'integer')
             ->addColumn('name', 'string')
             ->addColumn('fk_id', 'integer')
-            ->addConstraint('primary', [
+            ->addConstraint(
+                'primary',
+                [
                 'type' => TableSchema::CONSTRAINT_PRIMARY,
                 'columns' => ['id'],
-            ])
-            ->addConstraint('foreign_key', [
+                ]
+            )
+            ->addConstraint(
+                'foreign_key',
+                [
                 'columns' => ['fk_id'],
                 'type' => TableSchema::CONSTRAINT_FOREIGN,
                 'references' => ['test_table', 'id', ],
-            ]);
+                ]
+            );
 
         $queries = $schema->createSql($connection);
 
@@ -131,7 +141,7 @@ class SchemaCleanerDumpTest extends TestCase
 
         $connection->insert('test_table', ['name' => 'foo']);
 
-        $id = $connection->newQuery()->select('id')->from('test_table')->limit(1)->execute()->fetch()[0];
+        $id = $connection->selectQuery()->select('id')->from('test_table')->limit(1)->execute()->fetch()[0];
         $connection->insert('test_table2', ['name' => 'foo', 'fk_id' => $id]);
 
         $connection->execute($connection->getDriver()->enableForeignKeySQL());

@@ -16,18 +16,18 @@ namespace CakephpTestMigrator;
 use Cake\Console\ConsoleIo;
 use Cake\Database\Driver\Mysql;
 use Cake\Database\Driver\Postgres;
-use Cake\Database\DriverInterface;
 use Cake\Database\Schema\TableSchema;
 use Cake\Datasource\ConnectionInterface;
 use Cake\Datasource\ConnectionManager;
 use Cake\Utility\Hash;
+use PDOException;
 
 class SchemaCleaner
 {
     /**
      * @var \Cake\Console\ConsoleIo|null
      */
-    protected $io;
+    protected ?ConsoleIo $io = null;
 
     /**
      * SchemaCleaner constructor.
@@ -46,7 +46,7 @@ class SchemaCleaner
      * @return void
      * @throws \Exception if the dropping failed.
      */
-    public function drop(string $connectionName)
+    public function drop(string $connectionName): void
     {
         $this->info("Dropping all tables for connection {$connectionName}.");
 
@@ -55,7 +55,6 @@ class SchemaCleaner
         foreach ($this->listTables($connection) as $table) {
             $table = $connection->getSchemaCollection()->describe($table);
             if ($table instanceof TableSchema) {
-                /** @var DriverInterface $driver */
                 $driver = $connection->getDriver();
                 $stmts = array_merge($stmts, $driver->schemaDialect()->dropTableSql($table));
             }
@@ -71,10 +70,13 @@ class SchemaCleaner
      * @return void
      * @throws \Exception if the truncation failed.
      */
-    public function truncate(string $connectionName)
+    public function truncate(string $connectionName): void
     {
         $this->info("Truncating all tables for connection {$connectionName}.");
 
+        /**
+ * @var \Cake\Database\Connection $connection
+*/
         $connection = ConnectionManager::get($connectionName);
         $stmts = [];
         $tables = $this->listTables($connection);
@@ -82,7 +84,6 @@ class SchemaCleaner
         foreach ($tables as $table) {
             $table = $connection->getSchemaCollection()->describe($table);
             if ($table instanceof TableSchema) {
-                /** @var DriverInterface $driver */
                 $driver = $connection->getDriver();
                 $stmts = array_merge($stmts, $driver->schemaDialect()->truncateTableSql($table));
             }
@@ -94,7 +95,7 @@ class SchemaCleaner
     /**
      * List sall tables, without views.
      *
-     * @param ConnectionInterface $connection Connection.
+     * @param \Cake\Datasource\ConnectionInterface $connection Connection.
      * @return array
      */
     public function listTables(ConnectionInterface $connection): array
@@ -110,27 +111,31 @@ class SchemaCleaner
 
         $result = $connection->execute($query)->fetchAll();
         if ($result === false) {
-            throw new \PDOException($query . ' failed');
+            throw new PDOException($query . ' failed');
         }
 
         return (array)Hash::extract($result, '{n}.0');
     }
 
     /**
-     * @param  \Cake\Datasource\ConnectionInterface $connection Connection.
-     * @param  array               $commands Sql commands to run
+     * @param \Cake\Datasource\ConnectionInterface $connection Connection.
+     * @param array                                $commands   Sql commands to run
      * @return void
      * @throws \Exception
      */
     protected function executeStatements(ConnectionInterface $connection, array $commands): void
     {
-        $connection->disableConstraints(function ($connection) use ($commands) {
-            $connection->transactional(function (ConnectionInterface $connection) use ($commands) {
-                foreach ($commands as $sql) {
-                    $connection->execute($sql);
-                }
-            });
-        });
+        $connection->disableConstraints(
+            function (ConnectionInterface $connection) use ($commands): void {
+                $connection->transactional(
+                    function (ConnectionInterface $connection) use ($commands): void {
+                        foreach ($commands as $sql) {
+                            $connection->execute($sql);
+                        }
+                    }
+                );
+            }
+        );
     }
 
     /**
@@ -147,13 +152,14 @@ class SchemaCleaner
     /**
      * Unset the phinx migration tables from an array of tables.
      *
-     * @param  string[] $tables
+     * @param array<string> $tables
      * @return array
      */
     public function unsetMigrationTables(array $tables): array
     {
         $endsWithPhinxlog = function (string $string) {
             $needle = 'phinxlog';
+
             return substr($string, -strlen($needle)) === $needle;
         };
 

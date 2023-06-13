@@ -13,7 +13,6 @@ declare(strict_types=1);
  */
 namespace CakephpTestMigrator\Test\TestCase;
 
-
 use Cake\TestSuite\TestCase;
 use CakephpTestMigrator\ConfigReader;
 
@@ -38,12 +37,12 @@ class ConfigReaderTest extends TestCase
     {
         $config = [
             ['connection' => 'Foo', 'plugin' => 'Bar',],
-            ['plugin' => 'Bar',]
+            ['plugin' => 'Bar',],
         ];
 
         $expect = [
             ['connection' => 'Foo', 'plugin' => 'Bar',],
-            ['plugin' => 'Bar', 'connection' => 'test',]
+            ['plugin' => 'Bar', 'connection' => 'test',],
         ];
 
         $this->ConfigReader->readConfig($config);
@@ -54,7 +53,7 @@ class ConfigReaderTest extends TestCase
     public function testSetConfigFromEmptyInjection(): void
     {
         $expect = [
-            ['connection' => 'test']
+            ['connection' => 'test'],
         ];
 
         $this->ConfigReader->readConfig();
@@ -66,7 +65,7 @@ class ConfigReaderTest extends TestCase
     {
         $config1 = [
             'connection' => 'Foo1_testSetConfigWithConfigureAndInjection',
-            'plugin' => 'Bar1_testSetConfigWithConfigureAndInjection'
+            'plugin' => 'Bar1_testSetConfigWithConfigureAndInjection',
         ];
 
         $this->ConfigReader->readConfig($config1);
@@ -88,7 +87,6 @@ class ConfigReaderTest extends TestCase
         $this->assertSame($expected, $act);
     }
 
-
     public function testReadMigrationsInDatasourceAndInjection(): void
     {
         $this->ConfigReader->readMigrationsInDatasources();
@@ -101,7 +99,7 @@ class ConfigReaderTest extends TestCase
         $this->assertSame($expected, $act);
     }
 
-    public function arrays(): array
+    public static function arrays(): array
     {
         return [
             [['a' => 'b'], [['a' => 'b']]],

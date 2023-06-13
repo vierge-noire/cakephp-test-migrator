@@ -13,7 +13,6 @@ declare(strict_types=1);
  */
 namespace CakephpTestMigrator;
 
-
 use Cake\Datasource\ConnectionManager;
 
 final class TestConnectionManager
@@ -21,12 +20,12 @@ final class TestConnectionManager
     /**
      * @var bool
      */
-    private static $aliasConnectionIsLoaded = false;
+    private static bool $aliasConnectionIsLoaded = false;
 
     /**
      * @return void
      */
-    public static function aliasConnections()
+    public static function aliasConnections(): void
     {
         if (!self::$aliasConnectionIsLoaded) {
             (new self())->_aliasConnections();

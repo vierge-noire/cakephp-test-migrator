@@ -12,7 +12,6 @@ declare(strict_types=1);
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
-use Cake\ORM\TableRegistry;
 use Migrations\AbstractMigration;
 
 class AddArticles extends AbstractMigration
@@ -22,7 +21,9 @@ class AddArticles extends AbstractMigration
         $this->table('articles')
             ->addPrimaryKey(['id'])
             ->addColumn(
-                'title', 'string', [
+                'title',
+                'string',
+                [
                 'limit' => 128,
                 'null' => false,
                 ]
